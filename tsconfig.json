@@ -1,0 +1,12 @@
+{
+    "extends": ["@tsconfig/node-lts"],
+    "compilerOptions": {
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "baseUrl": "./src",
+        "paths": {
+            "@/*": ["*"]
+        }
+    },
+    "include": ["src/**/*.ts"],
+}
