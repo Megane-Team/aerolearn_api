@@ -7,7 +7,9 @@ import { port, host, databaseUrl } from "./config.js";
 import pg from "pg";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
+import { fastifyJwt, JWT } from "@fastify/jwt";
 import status from "statuses";
+import { secretKey } from "./config.js";
 
 const server = fastify({
     logger: {
@@ -16,6 +18,20 @@ const server = fastify({
         }
     }
 }).withTypeProvider<ZodTypeProvider>();
+
+
+server.register(fastifyJwt, {
+    secret: secretKey as any
+});
+
+declare module 'fastify' {
+    interface FastifyRequest {
+      jwt: JWT;
+    }
+    interface FastifyInstance {
+        authenticate: any
+    }
+}
 
 try {
     server.log.warn("Migrating database...");
@@ -53,7 +69,34 @@ server.register(import("@scalar/fastify-api-reference"), {
         }
     }
 });
-server.register(import("@fastify/cookie"));
+
+// JWT
+
+server.decorate('authenticate', async (req: any, res: any) => {
+    const token = req.headers['authorization'];
+    try {
+        if (!token) {
+            return res.code(401).send({ message: 'Missing or invalid token' });
+        }
+        const {id} = server.jwt.verify<{id:number}>(token);
+        req.id = id;
+    } catch (err) {
+        return res.code(401).send({ message: 'Invalid token' });
+    }
+}
+)
+
+
+server.addHook("preHandler",(req, res, next) => {
+    req.jwt = server.jwt
+    return next()
+})
+
+server.register(import("@fastify/cookie"),{
+    secret: secretKey,
+    hook: "onRequest",
+});
+
 // TODO: Enable security headers
 // server.register(import("@fastify/helmet"));
 // server.register(import("@fastify/cors"));
