@@ -1,10 +1,3 @@
-CREATE TYPE jawaban_is_benar_enum AS ENUM ('benar', 'salah');
-CREATE TYPE pelaksanaan_pelatihan_is_selesai_enum AS ENUM ('selesai', 'belum');
-CREATE TYPE status_ruangan AS ENUM ('dipakai', 'tidak dipakai');
-CREATE TYPE user_type AS ENUM ('eksternal', 'internal');
-CREATE TYPE absensi_peserta AS ENUM ('Hadir', 'Tidak Hadir');
-CREATE TYPE user_role AS ENUM ('peserta', 'instruktur', 'admin', 'kepala pelatihan');
-
 CREATE TABLE IF NOT EXISTS "absensi" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "absensi_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"id_peserta" integer NOT NULL,
@@ -25,6 +18,8 @@ CREATE TABLE IF NOT EXISTS "eksternal" (
 	"email" text NOT NULL,
 	"alamat" text NOT NULL,
 	"no_telp" text NOT NULL,
+	"tempat_tanggal_lahir" text NOT NULL,
+	"jenis_kelamin" "jenis_kelamin" NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -56,9 +51,11 @@ CREATE TABLE IF NOT EXISTS "karyawan" (
 	"nama" text NOT NULL,
 	"email" text NOT NULL,
 	"nik" text NOT NULL,
+	"tempat_tanggal_lahir" text NOT NULL,
 	"alamat" text NOT NULL,
 	"no_telp" text NOT NULL,
-	"divisi" text,
+	"unit_org" text NOT NULL,
+	"jenis_kelamin" "jenis_kelamin" NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

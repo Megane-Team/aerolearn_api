@@ -5,7 +5,7 @@ import { z } from "zod"
 import { karyawan } from "./karyawan.ts"
 import { eksternal } from "./data_eksternal.ts"
 
-const userType = pgEnum('user_type', ['eksternal', 'internal']);
+export const userType = pgEnum('user_type', ['eksternal', 'internal']);
 const userRole = pgEnum('user_role', ['peserta', 'instruktur', 'admin', 'kepala pelatihan']);
 
 export const users = pgTable('users', {
