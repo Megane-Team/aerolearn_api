@@ -1,5 +1,5 @@
 {
-  "id": "415df53b-7739-4894-b8ea-b57b7e44e874",
+  "id": "68cbd2c9-85a2-4cd0-83fd-11a24eec8d68",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -159,6 +159,19 @@
         "no_telp": {
           "name": "no_telp",
           "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tempat_tanggal_lahir": {
+          "name": "tempat_tanggal_lahir",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jenis_kelamin": {
+          "name": "jenis_kelamin",
+          "type": "jenis_kelamin",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -431,6 +444,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "tempat_tanggal_lahir": {
+          "name": "tempat_tanggal_lahir",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "alamat": {
           "name": "alamat",
           "type": "text",
@@ -443,11 +462,18 @@
           "primaryKey": false,
           "notNull": true
         },
-        "divisi": {
-          "name": "divisi",
+        "unit_org": {
+          "name": "unit_org",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        },
+        "jenis_kelamin": {
+          "name": "jenis_kelamin",
+          "type": "jenis_kelamin",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",

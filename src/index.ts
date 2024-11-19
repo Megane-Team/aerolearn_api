@@ -10,6 +10,9 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { fastifyJwt, JWT } from "@fastify/jwt";
 import status from "statuses";
 import { secretKey } from "./config.js";
+import { users } from "./models/users.ts";
+import { db } from "./modules/database.ts";
+import { eq } from "drizzle-orm";
 
 const server = fastify({
     logger: {
@@ -79,7 +82,12 @@ server.decorate('authenticate', async (req: any, res: any) => {
             return res.code(401).send({ message: 'Missing or invalid token' });
         }
         const {id} = server.jwt.verify<{id:number}>(token);
-        req.id = id;
+        const userResult = await db.select().from(users).where(eq(users.id, Number(id))).execute();
+        if (!userResult || userResult.length === 0) {
+            return res.code(401).send({ message: 'User not found' });
+        }
+        const user = userResult[0];
+        req.user = user;
     } catch (err) {
         return res.code(401).send({ message: 'Invalid token' });
     }
