@@ -22,17 +22,16 @@ const server = fastify({
     }
 }).withTypeProvider<ZodTypeProvider>();
 
-
 server.register(fastifyJwt, {
     secret: secretKey as any
 });
 
-declare module 'fastify' {
+declare module "fastify" {
     interface FastifyRequest {
-      jwt: JWT;
+        jwt: JWT;
     }
     interface FastifyInstance {
-        authenticate: any
+        authenticate: any;
     }
 }
 
@@ -74,35 +73,34 @@ server.register(import("@scalar/fastify-api-reference"), {
 });
 
 // JWT
-
-server.decorate('authenticate', async (req: any, res: any) => {
-    const token = req.headers['authorization'];
+server.decorate("authenticate", async (req: any, res: any) => {
+    const token = req.headers["authorization"];
     try {
         if (!token) {
-            return res.code(401).send({ message: 'Missing or invalid token' });
+            return res.code(401).send({ message: "Missing or invalid token" });
         }
-        const {id} = server.jwt.verify<{id:number}>(token);
+        const { id } = server.jwt.verify<{ id: number }>(token);
         const userResult = await db.select().from(users).where(eq(users.id, Number(id))).execute();
         if (!userResult || userResult.length === 0) {
-            return res.code(401).send({ message: 'User not found' });
+            return res.code(401).send({ message: "User not found" });
         }
         const user = userResult[0];
         req.user = user;
-    } catch (err) {
-        return res.code(401).send({ message: 'Invalid token' });
+    }
+    catch (err) {
+        return res.code(401).send({ message: "Invalid token" });
     }
 }
-)
+);
 
+server.addHook("preHandler", (req, res, next) => {
+    req.jwt = server.jwt;
+    return next();
+});
 
-server.addHook("preHandler",(req, res, next) => {
-    req.jwt = server.jwt
-    return next()
-})
-
-server.register(import("@fastify/cookie"),{
+server.register(import("@fastify/cookie"), {
     secret: secretKey,
-    hook: "onRequest",
+    hook: "onRequest"
 });
 
 // TODO: Enable security headers
