@@ -1,19 +1,22 @@
-import { sql } from "drizzle-orm"
-import { integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
-import { createInsertSchema, createSelectSchema } from "drizzle-zod"
+import { sql } from "drizzle-orm";
+import { integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-const jenis_kelamin = pgEnum('jenis_kelamin', ['L', 'P'])
-export const karyawan = pgTable('karyawan', {
+export const jenis_kelamin = pgEnum("jenis_kelamin", ["L", "P"]);
+export const karyawan = pgTable("karyawan", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
+    nik: integer().notNull(),
     nama: text().notNull(),
-    email: text().notNull(),
-    nik: text().notNull(),
-    tempat_tanggal_lahir: text().notNull(),
-    alamat: text().notNull(),
-    no_telp: text().notNull(),
-    unit_org: text().notNull(),
+    tanggal_lahir: text().notNull(),
+    tempat_lahir: text().notNull(),
     jenis_kelamin: jenis_kelamin().notNull(),
-    createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
+    unit_org: text().notNull(),
+    alamat: text().notNull(),
+    status: text(),
+    posisi: text().notNull(),
+    email: text(),
+    no_telp: text(),
+    createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 });
 
 export const karyawanSchema = {

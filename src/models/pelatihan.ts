@@ -1,13 +1,15 @@
-import { sql } from "drizzle-orm"
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core"
-import { createInsertSchema, createSelectSchema } from "drizzle-zod"
+import { sql } from "drizzle-orm";
+import { integer, pgTable, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-export const pelatihan = pgTable('pelatihan', {
+export const kategori = pgEnum("kategori", ["softskill", "hardskill"]);
+export const pelatihan = pgTable("pelatihan", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     nama: text().notNull(),
-    deskripsi: text(),
+    deskripsi: text().notNull(),
     koordinator: text().notNull(),
-    createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
+    kategori: kategori().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 });
 
 export const pelatihanSchema = {
