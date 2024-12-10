@@ -12,7 +12,7 @@ export const users = pgTable("users", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     id_karyawan: integer().references(() => karyawan.id),
     id_eksternal: integer().references(() => eksternal.id),
-    username: text().notNull().unique(),
+    email: text().notNull().unique(),
     password: text().notNull(),
     user_role: userRole().notNull(),
     user_type: userType().notNull(),
@@ -23,6 +23,6 @@ export const users = pgTable("users", {
 export const userSchema = {
     insert: createInsertSchema(users),
     select: createSelectSchema(users).extend({
-        username: z.string().min(1, { message: "Username is required" })
+        email: z.string().min(1, { message: "Email is required" })
     })
 };

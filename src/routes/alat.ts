@@ -10,16 +10,13 @@ export const prefix = "/alat";
 
 export const route = (instance: typeof server) => {
     instance
-        .get("/:id", { // id pelatihan
+        .get("/", {
             preHandler: [instance.authenticate],
             schema: {
-                description: "get alat",
+                description: "get tools",
                 tags: ["getAll"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
-                }),
-                params: z.object({
-                    id: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -29,12 +26,11 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const id = req.params;
-            const res = await db.select().from(alat).where(eq(alat.id_pelatihan, Number(id))).execute();
+            const res = await db.select().from(alat).execute();
             if (!res) {
                 return {
                     statusCode: 401,
-                    message: "alat not found"
+                    message: "tools not found"
                 };
             }
             return {
@@ -45,7 +41,7 @@ export const route = (instance: typeof server) => {
         }).post("/+", {
             preHandler: [instance.authenticate],
             schema: {
-                description: "adding alat",
+                description: "adding tool",
                 tags: ["adding"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
@@ -63,7 +59,7 @@ export const route = (instance: typeof server) => {
             if (alatId.length > 0) {
                 return {
                     statusCode: 401,
-                    message: "alat is already exist"
+                    message: "tool is already exist"
                 };
             }
 
@@ -78,5 +74,38 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-        );
+    ).get("/:id", { // id pelatihan
+        preHandler: [instance.authenticate],
+        schema: {
+            description: "get tool",
+            tags: ["detail"],
+            headers: z.object({
+                authorization: z.string().transform(v => v.replace("Bearer ", ""))
+            }),
+            params: z.object({
+                id: z.string()
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: z.array(alatSchema.select)
+                })),
+                401: genericResponse(401)
+            }
+        }
+    }, async (req) => {
+        const id = req.params;
+        const res = await db.select().from(alat).where(eq(alat.id_pelatihan, Number(id))).execute();
+        if (!res) {
+            return {
+                statusCode: 401,
+                message: "tool not found"
+            };
+        }
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: res
+        };
+    }
+    );
 };

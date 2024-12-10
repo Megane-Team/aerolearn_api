@@ -1,12 +1,20 @@
+CREATE TYPE "public"."absensi_peserta" AS ENUM('Hadir', 'Tidak Hadir');--> statement-breakpoint
 CREATE TYPE "public"."jenis_kelamin" AS ENUM('L', 'P');--> statement-breakpoint
+CREATE TYPE "public"."status" AS ENUM('terima', 'menunggu', 'tolak');--> statement-breakpoint
 CREATE TYPE "public"."jawaban_is_benar_enum" AS ENUM('benar', 'salah');--> statement-breakpoint
 CREATE TYPE "public"."kategori" AS ENUM('softskill', 'hardskill');--> statement-breakpoint
 CREATE TYPE "public"."jenis_training" AS ENUM('mandatory', 'general knowledge', 'customer requested');--> statement-breakpoint
 CREATE TYPE "public"."pelaksanaan_pelatihan_is_selesai_enum" AS ENUM('selesai', 'belum');--> statement-breakpoint
 CREATE TYPE "public"."status_ruangan" AS ENUM('dipakai', 'tidak dipakai');--> statement-breakpoint
-CREATE TYPE "public"."absensi_peserta" AS ENUM('Hadir', 'Tidak Hadir');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('peserta', 'instruktur', 'admin', 'kepala pelatihan');--> statement-breakpoint
 CREATE TYPE "public"."user_type" AS ENUM('eksternal', 'internal');--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "table_peserta" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "table_peserta_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"id_pelaksanaan_pelatihan" integer NOT NULL,
+	"id_peserta" integer NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "alat" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "alat_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"nama" text NOT NULL,
@@ -25,10 +33,17 @@ CREATE TABLE IF NOT EXISTS "eksternal" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "permintaanTraining" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "permintaanTraining_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"id_pelaksanaan_pelatihan" integer NOT NULL,
+	"status" "status" NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "exam" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "exam_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"question" text NOT NULL,
-	"id_pelatihan" integer NOT NULL,
+	"text" text NOT NULL,
+	"id_user" integer NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -77,7 +92,7 @@ CREATE TABLE IF NOT EXISTS "nilai" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "nilai_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"id_peserta" integer NOT NULL,
 	"id_pelatihan" integer NOT NULL,
-	"nilai" integer NOT NULL,
+	"score" integer NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -122,16 +137,7 @@ CREATE TABLE IF NOT EXISTS "sertifikat" (
 	"id_nilai" integer NOT NULL,
 	"id_peserta" integer NOT NULL,
 	"id_pelatihan" integer NOT NULL,
-	"sertifikat" text NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "table_peserta" (
-	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "table_peserta_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"id_pelaksanaan_pelatihan" integer NOT NULL,
-	"id_materi" integer NOT NULL,
-	"id_peserta" integer NOT NULL,
-	"status_absen" "absensi_peserta" NOT NULL,
+	"sertifikasi" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -139,13 +145,25 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "users_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"id_karyawan" integer,
 	"id_eksternal" integer,
-	"username" text NOT NULL,
+	"email" text NOT NULL,
 	"password" text NOT NULL,
 	"user_role" "user_role" NOT NULL,
 	"user_type" "user_type" NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "users_username_unique" UNIQUE("username")
+	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "table_peserta" ADD CONSTRAINT "table_peserta_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk" FOREIGN KEY ("id_pelaksanaan_pelatihan") REFERENCES "public"."pelaksanaan_pelatihan"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "table_peserta" ADD CONSTRAINT "table_peserta_id_peserta_users_id_fk" FOREIGN KEY ("id_peserta") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "alat" ADD CONSTRAINT "alat_id_pelatihan_pelatihan_id_fk" FOREIGN KEY ("id_pelatihan") REFERENCES "public"."pelatihan"("id") ON DELETE no action ON UPDATE no action;
@@ -154,7 +172,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "exam" ADD CONSTRAINT "exam_id_pelatihan_pelatihan_id_fk" FOREIGN KEY ("id_pelatihan") REFERENCES "public"."pelatihan"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "permintaanTraining" ADD CONSTRAINT "permintaanTraining_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk" FOREIGN KEY ("id_pelaksanaan_pelatihan") REFERENCES "public"."pelaksanaan_pelatihan"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -245,24 +263,6 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "sertifikat" ADD CONSTRAINT "sertifikat_id_pelatihan_pelaksanaan_pelatihan_id_fk" FOREIGN KEY ("id_pelatihan") REFERENCES "public"."pelaksanaan_pelatihan"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "table_peserta" ADD CONSTRAINT "table_peserta_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk" FOREIGN KEY ("id_pelaksanaan_pelatihan") REFERENCES "public"."pelaksanaan_pelatihan"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "table_peserta" ADD CONSTRAINT "table_peserta_id_materi_materi_id_fk" FOREIGN KEY ("id_materi") REFERENCES "public"."materi"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "table_peserta" ADD CONSTRAINT "table_peserta_id_peserta_users_id_fk" FOREIGN KEY ("id_peserta") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -2547,7 +2547,7 @@ INSERT INTO karyawan (nik, nama, tanggal_lahir, tempat_lahir, jenis_kelamin, uni
 ('197293', 'KOMARUDIN', '10-May-63', 'BANDUNG', 'L', 'FT3000', 'KONTRAK DN FULL < 55', '', 'KEL.MARGAHAYU SELATAN KEC.MARGAHAYU     1114BANDUNG        40226'),
 ('197294', 'ASEP SUMARA', '05-Jun-61', 'GARUT', 'L', 'MP2000', 'KONTRAK DN FULL < 55', '', 'JL.TARUNA V NO.69 PASIRENDAH-UJUNGBERUNG0502BANDUNG        40612'),
 ('197296', 'ELDAT SIMANJUNTAK', '07-Jun-61', 'GALANG', 'L', 'TD4000', 'KONTRAK DN FULL < 55', '', 'JL PRATISTA BRT III NO 16 ANTAPANI KIDUL0215BANDUNG        40291'),
-('197297', 'RAHMAT MA`RUF', '10-Jun-63', 'SUKABUMI', 'L', 'MP0100', 'KONTRAK DN FULL < 55', '', 'KOMP PURICIPAGERAN 2 B13/1 TANIMULYA    0518BANDUNG        40552'),
+('197297', 'RAHMAT MARUF', '10-Jun-63', 'SUKABUMI', 'L', 'MP0100', 'KONTRAK DN FULL < 55', '', 'KOMP PURICIPAGERAN 2 B13/1 TANIMULYA    0518BANDUNG        40552'),
 ('197298', 'ISNA RATIZA', '03-Nov-60', 'MEDAN', 'P', 'SE4000', 'KONTRAK DN FULL < 55', '', 'PERUM CIMINDI RAYA AP-8 PASIRKALIKI     0313BANDUNG        40514'),
 ('197303', 'BERINITI SUPARTANTO', '22-Nov-59', 'BANDUNG', 'L', 'SL0000', 'KONTRAK DN FULL < 55', '', 'BUMI INDAH KAV 12 CIBEUREUM CIMSEL      0122BANDUNG        40536'),
 ('197304', 'RIZKA ANDENTY', '03-Dec-93', 'SOROAKO', 'P', 'PI0100', 'KONTRAK DN FULL < 55', '', 'JL. KOTA MAS VI NO.9 PERUM KOTA MAS     0000CIMAHI         0'),
@@ -2908,7 +2908,7 @@ INSERT INTO karyawan (nik, nama, tanggal_lahir, tempat_lahir, jenis_kelamin, uni
 ('207105', 'WAWAN SUPRIYATNA', '16-Apr-62', 'KUNINGAN', 'L', 'MS3300', 'KONTRAK DN FULL < 55', '', 'KP CIDAHU NO 50  TANIMULYA - NGAMPRAH   0201BANDUNG        40552'),
 ('207106', 'TETEN IRAWAN', '08-May-62', 'BANDUNG', 'L', 'AS0000', 'KONTRAK DN FULL < 55', 'Plt General Manager Services', 'KOMP MARGAHAYURAYA BARAT LII A/NO.38    0631BANDUNG        40286'),
 ('207109', 'AYI BUNBUN', '09-May-64', 'CIANJUR', 'L', 'CM0130', 'KONTRAK DN FULL < 55', '', 'BUKIT PERMATA CIMAHI BLOK F-2 NO 25     0322BANDUNG        40552'),
-('207111', 'ABDULLAH A MA`RUFI', '14-Apr-64', 'JAKARTA', 'L', 'ES1000', 'KONTRAK DN FULL < 55', '', 'SARIJADI BLOK VII NO. 52                0109BANDUNG        40151'),
+('207111', 'ABDULLAH A MARUFI', '14-Apr-64', 'JAKARTA', 'L', 'ES1000', 'KONTRAK DN FULL < 55', '', 'SARIJADI BLOK VII NO. 52                0109BANDUNG        40151'),
 ('207112', 'RUDI KADARUSMAN', '19-Apr-62', 'BANDUNG', 'L', 'MS4400', 'KONTRAK DN FULL < 55', '', 'JL PANGARANG N0 55/17B KEL. CIKAWAO     0508BANDUNG        40261'),
 ('207113', 'WAHYU ROHENDI', '02-May-64', 'CIAMIS', 'L', 'PE4000', 'KONTRAK DN FULL < 55', '', 'KOMP.MARGA ASIH D 13 NO.16 MARGAASIH CMI0608BANDUNG        40215'),
 ('207116', 'DEDI RUHIYAT', '15-Mar-62', 'CIANJUR', 'L', 'PE3000', 'KONTRAK DN FULL < 55', '', 'JL ASTER I NO.4 KOMP.BATUJAJAR INDAH    0000BANDUNG        40000'),
@@ -3728,7 +3728,7 @@ INSERT INTO karyawan (nik, nama, tanggal_lahir, tempat_lahir, jenis_kelamin, uni
 ('930101', 'RONALDI OSCARYA P', '07-Oct-68', 'UJUNG PANDANG', 'L', 'SE4000', 'KARYAWAN TETAP', '', 'KOMP ANGGARAN I NO 4 MARGASARI MARGACINT0306BANDUNG        40286'),
 ('930114', 'DWI RAHARJO', '01-May-67', 'KULON PROGO', 'L', 'TD3000', 'KARYAWAN TETAP', '', 'JL MENTOR GG H HAMBALI II/45A SUKARAJA  0107BANDUNG        40175'),
 ('930117', 'TEGUH WAHYU WINDARTO', '11-Mar-65', 'YOGYAKARTA', 'L', 'TD4000', 'KARYAWAN TETAP', '', 'PURI CIPAGERAN INDAH II  C-I NO 12      0120BANDUNG        40552'),
-('930125', 'ROFI`I', '12-Feb-65', 'JEPARA', 'L', 'TD2000', 'KARYAWAN TETAP', '', 'JL INDRA JAYA I-B/30 CISARANTEN ARCAMANI0209BANDUNG        40293'),
+('930125', 'ROFII', '12-Feb-65', 'JEPARA', 'L', 'TD2000', 'KARYAWAN TETAP', '', 'JL INDRA JAYA I-B/30 CISARANTEN ARCAMANI0209BANDUNG        40293'),
 ('930145', 'SUTRISNO HERY S', '26-Sep-68', 'NGAWI', 'L', 'MS2000', 'KARYAWAN TETAP', 'Manager Maintenance, Repair & Overhoul (MRO) Aircraft', 'BUMI PAKUSARAKAN 2 BLOK D NO 4 NGAMPRAH 0901BANDUNG        40552'),
 ('930149', 'AGUNG SUPRAPTA', '09-Sep-69', 'KLATEN', 'L', 'SL0000', 'KARYAWAN TETAP', 'Assiten Manajer Penjualan Jasa Engineering Dan Staff', 'JL YOS SUDARSO GG SERAYU                0501BATANG         51211'),
 ('930158', 'AGUS PRASETYO', '23-Aug-66', 'MADIUN', 'L', 'TD4000', 'KARYAWAN TETAP', '', 'PERMATA HIJAU PERMAI BR 2/18 KALIABANG  0717BEKASI         00000'),

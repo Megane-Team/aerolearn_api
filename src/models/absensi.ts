@@ -5,8 +5,8 @@ import { users } from "./users.ts";
 import { pelaksanaanPelatihan } from "./rancangan_pelatihan.ts";
 import { materi } from "./materi.ts";
 
-export const absensiStatusAbsenEnum = pgEnum("absensi_peserta", ["Hadir", "Tidak Hadir"]);
-export const tablePeserta = pgTable("table_peserta", {
+export const absensiStatusAbsenEnum = pgEnum("absensi_peserta", ["Validasi", "Belum Validasi"]);
+export const absensi = pgTable("absensi_peserta", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     id_pelaksanaan_pelatihan: integer().notNull().references(() => pelaksanaanPelatihan.id),
     id_materi: integer().notNull().references(() => materi.id),
@@ -15,7 +15,7 @@ export const tablePeserta = pgTable("table_peserta", {
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 });
 
-export const tablePesertaSchema = {
-    insert: createInsertSchema(tablePeserta),
-    select: createSelectSchema(tablePeserta),
+export const absensiSchema = {
+    insert: createInsertSchema(absensi),
+    select: createSelectSchema(absensi),
 };
