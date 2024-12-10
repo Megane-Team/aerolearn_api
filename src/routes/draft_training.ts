@@ -1,38 +1,40 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
+import { permintaanTraining, permintaanTrainingSchema } from "@/models/draft_permintaan_training.ts";
+import { exam } from "@/models/exam.ts";
+import { jawaban } from "@/models/jawaban.ts";
 import { materi, materiSchema } from "@/models/materi.ts";
+import { nilai, nilaiSchema } from "@/models/nilai.ts";
+import { sertifikat, sertifikatSchema } from "@/models/sertifikasi.ts";
 import { db } from "@/modules/database.ts";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-export const prefix = "/materi";
+export const prefix = "/draft";
+
 export const route = (instance: typeof server) => {
     instance
-        .get("/:id", { //id pelatihan
+        .get("/", {
             preHandler: [instance.authenticate],
             schema: {
-                description: "get materi",
+                description: "get draft",
                 tags: ["getAll"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
-                params: z.object({
-                    id: z.string()
-                }),
                 response: {
                     200: genericResponse(200).merge(z.object({
-                        data: z.array(materiSchema.select)
+                        data: z.array(permintaanTrainingSchema.select)
                     })),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const { id } = req.params;
-            const res = await db.select().from(materi).where(eq(materi.id_pelatihan, Number(id))).execute();
+            const res = await db.select().from(permintaanTraining).execute();
             if (!res) {
                 return {
                     statusCode: 401,
-                    message: "materi not found"
+                    message: "permintaan training not found"
                 };
             }
             return {
@@ -40,42 +42,26 @@ export const route = (instance: typeof server) => {
                 message: "Success",
                 data: res
             };
-        }).post("/+", {
+        }).post("/update", {
             preHandler: [instance.authenticate],
             schema: {
-                description: "adding materi",
-                tags: ["adding"],
+                description: "update draft",
+                tags: ["update"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
-                body: materiSchema.insert,
+                body: permintaanTrainingSchema.insert,
                 response: {
                     200: genericResponse(200),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const { judul, id_pelatihan, konten } = req.body;
-            // const konten = await req.file();
-            // const buffer = await konten?.toBuffer();
-            // const fileName = `${judul}.pdf`;
-            // await fsPromises.writeFile(fileName, buffer); 
-            const materiGet = await db.select().from(materi).where(eq(materi.judul, judul)).execute();
-
-            if (materiGet.length > 0) {
-                return {
-                    statusCode: 401,
-                    message: "materi is already exist"
-                };
-            }
-
-            await db.insert(materi).values({
-                judul,
-                konten,
-                id_pelatihan,
-                createdAt: new Date()
-            }).execute();
-
+            const { id, status} = req.body;
+             await db.update(permintaanTraining).set({
+                status: status,
+             }).where(eq(permintaanTraining.id, Number(id))).execute();
+             
             return {
                 statusCode: 200,
                 message: "Success"

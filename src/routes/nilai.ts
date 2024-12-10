@@ -1,17 +1,22 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
+import { exam } from "@/models/exam.ts";
+import { jawaban } from "@/models/jawaban.ts";
 import { materi, materiSchema } from "@/models/materi.ts";
+import { nilai, nilaiSchema } from "@/models/nilai.ts";
+import { sertifikat, sertifikatSchema } from "@/models/sertifikasi.ts";
 import { db } from "@/modules/database.ts";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-export const prefix = "/materi";
+export const prefix = "/nilai";
+
 export const route = (instance: typeof server) => {
     instance
-        .get("/:id", { //id pelatihan
+        .get("/:id", {
             preHandler: [instance.authenticate],
             schema: {
-                description: "get materi",
+                description: "get answer",
                 tags: ["getAll"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
@@ -21,18 +26,17 @@ export const route = (instance: typeof server) => {
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
-                        data: z.array(materiSchema.select)
+                        data: z.array(nilaiSchema.select)
                     })),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const { id } = req.params;
-            const res = await db.select().from(materi).where(eq(materi.id_pelatihan, Number(id))).execute();
+            const res = await db.select().from(nilai).execute();
             if (!res) {
                 return {
                     statusCode: 401,
-                    message: "materi not found"
+                    message: "score not found"
                 };
             }
             return {
@@ -43,37 +47,30 @@ export const route = (instance: typeof server) => {
         }).post("/+", {
             preHandler: [instance.authenticate],
             schema: {
-                description: "adding materi",
+                description: "adding score",
                 tags: ["adding"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
-                body: materiSchema.insert,
+                body: sertifikatSchema.insert,
                 response: {
                     200: genericResponse(200),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const { judul, id_pelatihan, konten } = req.body;
-            // const konten = await req.file();
-            // const buffer = await konten?.toBuffer();
-            // const fileName = `${judul}.pdf`;
-            // await fsPromises.writeFile(fileName, buffer); 
-            const materiGet = await db.select().from(materi).where(eq(materi.judul, judul)).execute();
+            const { id_peserta, id_pelatihan} = req.body;
 
-            if (materiGet.length > 0) {
-                return {
-                    statusCode: 401,
-                    message: "materi is already exist"
-                };
-            }
+            const res = await db.select().from(jawaban).where(and( eq(jawaban.id_peserta, id_peserta), eq(jawaban.is_benar, 'benar') )).execute();
+            const getExam = await db.select().from(exam).where(eq(exam.id_pelatihan, id_pelatihan));
 
-            await db.insert(materi).values({
-                judul,
-                konten,
+            const totalQuestion = getExam.length;
+            const score = (res.length / totalQuestion) * 100;
+            await db.insert(nilai).values({
+                id_peserta,
                 id_pelatihan,
-                createdAt: new Date()
+                score,
+                createdAt: new Date(),
             }).execute();
 
             return {

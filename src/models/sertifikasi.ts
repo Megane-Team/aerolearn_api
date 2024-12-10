@@ -10,7 +10,7 @@ export const sertifikat = pgTable("sertifikat", {
     id_nilai: integer().notNull().references(() => nilai.id),
     id_peserta: integer().notNull().references(() => users.id),
     id_pelatihan: integer().notNull().references(() => pelaksanaanPelatihan.id),
-    sertifikat: text().notNull(),
+    sertifikasi: text().notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 });
 

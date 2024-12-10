@@ -59,7 +59,7 @@ export const route = (instance: typeof server) => {
             if (trainee.length > 0) {
                 return {
                     statusCode: 401,
-                    message: "data tainee is already exist"
+                    message: "data eksternal is already exist"
                 };
             }
 
@@ -103,7 +103,7 @@ export const route = (instance: typeof server) => {
             if (!traineeDetail || traineeDetail.length === 0) {
                 return {
                     statusCode: 401,
-                    message: "data not found"
+                    message: "data eksternal not found"
                 };
             }
 

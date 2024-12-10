@@ -12,7 +12,7 @@ export const route = (instance: typeof server) => {
         .get("/", {
             preHandler: [instance.authenticate],
             schema: {
-                description: "get all data karyawan",
+                description: "get all data internal",
                 tags: ["getAll"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
@@ -26,12 +26,6 @@ export const route = (instance: typeof server) => {
             }
         }, async (req) => {
             const res = await db.select().from(karyawan).execute();
-            if (!res) {
-                return {
-                    statusCode: 401,
-                    message: "data karyawan not found"
-                };
-            }
             return {
                 statusCode: 200,
                 message: "Success",
@@ -40,7 +34,7 @@ export const route = (instance: typeof server) => {
         }).post("/+", {
             preHandler: [instance.authenticate],
             schema: {
-                description: "adding karyawan",
+                description: "adding data internal",
                 tags: ["adding"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
@@ -59,7 +53,7 @@ export const route = (instance: typeof server) => {
             if (trainee.length > 0) {
                 return {
                     statusCode: 401,
-                    message: "data karyawan is already exist"
+                    message: "data internal is already exist"
                 };
             }
 
@@ -86,7 +80,7 @@ export const route = (instance: typeof server) => {
         ).get("/:id", {
             preHandler: [instance.authenticate],
             schema: {
-                description: "get data karyawan detail",
+                description: "get data internal detail",
                 tags: ["detail"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
@@ -108,20 +102,20 @@ export const route = (instance: typeof server) => {
             if (!id) {
                 return {
                     statusCode: 401,
-                    message: "data not found"
+                    message: "data internal not found"
                 };
             }
 
             if (!karyawanDetail || karyawanDetail.length === 0) {
                 return {
                     statusCode: 401,
-                    message: "data not found"
+                    message: "data internal not found"
                 };
             }
 
             return {
                 statusCode: 200,
-                message: "karyawan detail retrieved successfully",
+                message: "internal detail retrieved successfully",
                 data: karyawanDetail[0]
             };
         }

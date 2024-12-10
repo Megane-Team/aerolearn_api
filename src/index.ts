@@ -13,6 +13,8 @@ import { secretKey } from "./config.js";
 import { users } from "./models/users.ts";
 import { db } from "./modules/database.ts";
 import { eq } from "drizzle-orm";
+import fastifyStatic from "@fastify/static";
+import fastifyMultipart from "@fastify/multipart";
 
 const server = fastify({
     logger: {
@@ -135,6 +137,24 @@ server.addHook("preSerialization", async (req, rep, payload: Record<string, unkn
 
     return { ...newPayload, ...payload };
 });
+
+server.register(fastifyStatic, {
+    root: resolve(import.meta.dirname, 'public/docs'),
+    prefix: '/docs/',
+    constraints: {host: 'localhost:3000'}
+});
+
+server.register(fastifyMultipart, {
+    limits: {
+      fieldNameSize: 100, // Max field name size in bytes
+      fieldSize: 100,     // Max field value size in bytes
+      fields: 10,         // Max number of non-file fields
+      fileSize: 1000000,  // For multipart forms, the max file size in bytes
+      files: 1,           // Max number of file fields
+      headerPairs: 2000,  // Max number of header key=>value pairs
+      parts: 1000         // For multipart forms, the max number of parts (fields + files)
+    }
+  });
 
 server.listen({ port: port, host: host })
     .catch((error) => {

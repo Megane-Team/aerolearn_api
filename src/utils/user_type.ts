@@ -9,3 +9,8 @@ export enum UserRole {
     kepala_pelatihan = "kepala_pelatihan",
     admin = "admin"
 }
+
+export enum jenisTraining {
+    mandatory = "mandatory",
+    basic= "basic",
+}

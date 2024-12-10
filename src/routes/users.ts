@@ -12,7 +12,6 @@ import { eksternal } from "@/models/data_eksternal.ts";
 export const prefix = "/user";
 const userSchemaId = z.object({
     id: z.number(),
-    username: z.string(),
     nama: z.string(),
     email: z.string(),
     password: z.string(),
@@ -31,7 +30,10 @@ export const route = (instance: typeof server) => {
             schema: {
                 description: "user login",
                 tags: ["login"],
-                body: userSchema.select.pick({ username: true, password: true }),
+                body: z.object({
+                    email: z.string(),
+                    password: z.string(),
+                }),
                 response: {
                     200: genericResponse(200).merge(z.object({
                         token: z.string(),
@@ -41,8 +43,8 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { username, password } = req.body;
-            const user = await db.select().from(users).where(eq(users.username, username)).execute();
+            const { email, password } = req.body;
+            const user = await db.select().from(users).where(eq(users.email, email)).execute();
 
             if (user.length === 0) {
                 return {
@@ -50,7 +52,6 @@ export const route = (instance: typeof server) => {
                     message: "Unauthorized"
                 };
             };
-
             const verify = await argon2.verify(user[0].password, password);
             if (!verify) {
                 return {
@@ -81,7 +82,7 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { username, password, user_role, user_type, id_karyawan, id_eksternal } = req.body;
+            const { email, password, user_role, user_type, id_karyawan, id_eksternal } = req.body;
 
             const user = await db.select().from(users).where(
                 or(
@@ -104,7 +105,7 @@ export const route = (instance: typeof server) => {
             await db.insert(users).values({
                 id_karyawan,
                 id_eksternal,
-                username,
+                email,
                 password: hashPass,
                 user_role,
                 user_type,
@@ -134,21 +135,25 @@ export const route = (instance: typeof server) => {
             const user = req.user as User;
             const user_type = user.user_type ? user.user_type.toString() : null;
             const id = user.id ? user.id.toString() : null;
+            let joinTable, joinCondition, namaField, emailField; 
+            if (user_type === UserType.Internal) { 
+                joinTable = karyawan; 
+                joinCondition = eq(users.id_karyawan, karyawan.id); 
+                namaField = karyawan.nama; 
+            } else { 
+                joinTable = eksternal; 
+                joinCondition = eq(users.id_eksternal, eksternal.id); namaField = eksternal.nama; emailField = eksternal.email; 
+            } 
+            
+            const dataUser = await db.select({ 
+                id: users.id, 
+                password: users.password, 
+                user_role: users.user_role, 
+                nama: namaField, 
+                email: users.email, 
+            }).from(users).innerJoin(joinTable, joinCondition).where(eq(users.id, Number(id))).execute();
 
-            const dataUser = await db.select({
-                id: users.id,
-                username: users.username,
-                password: users.password,
-                user_role: users.user_role,
-                nama: user_type === UserType.Internal ? karyawan.nama : eksternal.nama,
-                email: user_type === UserType.Internal ? karyawan.email : eksternal.email
-            })
-                .from(users)
-                .innerJoin(user_type === UserType.Internal ? karyawan : eksternal, eq(user_type === UserType.Internal ? users.id_karyawan : users.id_eksternal, user_type === UserType.Internal ? karyawan.id : eksternal.id))
-                .where(eq(users.id, Number(id)))
-                .execute();
-
-            if (!dataUser || dataUser.length === 0) {
+            if (!dataUser) {
                 return {
                     statusCode: 401,
                     message: "User profile not found"
@@ -158,7 +163,7 @@ export const route = (instance: typeof server) => {
             return {
                 statusCode: 200,
                 message: "User profile retrieved successfully",
-                data: dataUser[0]
+                data: dataUser[0],
             };
         });
 };
