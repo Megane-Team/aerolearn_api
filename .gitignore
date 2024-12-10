@@ -1,4 +1,5 @@
 .env
+directory/d
 # Logs
 logs
 *.log
