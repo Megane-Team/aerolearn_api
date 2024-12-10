@@ -1,5 +1,5 @@
 .env
-directory/d
+drizzle/meta/
 # Logs
 logs
 *.log
