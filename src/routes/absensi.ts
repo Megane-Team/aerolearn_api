@@ -35,7 +35,7 @@ export const route = (instance: typeof server) => {
             if (!res) {
                 return {
                     statusCode: 401,
-                    message: "peserta not found not found"
+                    message: "peserta not found"
                 };
             }
             return {
