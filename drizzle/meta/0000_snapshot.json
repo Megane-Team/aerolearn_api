@@ -1,11 +1,11 @@
 {
-  "id": "77f2e9cb-ad54-41ee-b39e-5149349d21e0",
+  "id": "ee4bf319-1a25-45d1-83ef-09fb278214b6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.table_peserta": {
-      "name": "table_peserta",
+    "public.absensi_peserta": {
+      "name": "absensi_peserta",
       "schema": "",
       "columns": {
         "id": {
@@ -15,7 +15,7 @@
           "notNull": true,
           "identity": {
             "type": "always",
-            "name": "table_peserta_id_seq",
+            "name": "absensi_peserta_id_seq",
             "schema": "public",
             "increment": "1",
             "startWith": "1",
@@ -31,9 +31,22 @@
           "primaryKey": false,
           "notNull": true
         },
+        "id_materi": {
+          "name": "id_materi",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "id_peserta": {
           "name": "id_peserta",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status_absen": {
+          "name": "status_absen",
+          "type": "absensi_peserta",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -47,9 +60,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "table_peserta_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk": {
-          "name": "table_peserta_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk",
-          "tableFrom": "table_peserta",
+        "absensi_peserta_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk": {
+          "name": "absensi_peserta_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk",
+          "tableFrom": "absensi_peserta",
           "tableTo": "pelaksanaan_pelatihan",
           "columnsFrom": [
             "id_pelaksanaan_pelatihan"
@@ -60,9 +73,22 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "table_peserta_id_peserta_users_id_fk": {
-          "name": "table_peserta_id_peserta_users_id_fk",
-          "tableFrom": "table_peserta",
+        "absensi_peserta_id_materi_materi_id_fk": {
+          "name": "absensi_peserta_id_materi_materi_id_fk",
+          "tableFrom": "absensi_peserta",
+          "tableTo": "materi",
+          "columnsFrom": [
+            "id_materi"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "absensi_peserta_id_peserta_users_id_fk": {
+          "name": "absensi_peserta_id_peserta_users_id_fk",
+          "tableFrom": "absensi_peserta",
           "tableTo": "users",
           "columnsFrom": [
             "id_peserta"
@@ -769,6 +795,75 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.notifications": {
+      "name": "notifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "notifications_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "id_peserta": {
+          "name": "id_peserta",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "detail": {
+          "name": "detail",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "notifications_id_peserta_users_id_fk": {
+          "name": "notifications_id_peserta_users_id_fk",
+          "tableFrom": "notifications",
+          "tableTo": "users",
+          "columnsFrom": [
+            "id_peserta"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.opsi_jawaban": {
       "name": "opsi_jawaban",
       "schema": "",
@@ -1172,6 +1267,82 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.table_peserta": {
+      "name": "table_peserta",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "table_peserta_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "id_pelaksanaan_pelatihan": {
+          "name": "id_pelaksanaan_pelatihan",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_peserta": {
+          "name": "id_peserta",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "table_peserta_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk": {
+          "name": "table_peserta_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk",
+          "tableFrom": "table_peserta",
+          "tableTo": "pelaksanaan_pelatihan",
+          "columnsFrom": [
+            "id_pelaksanaan_pelatihan"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "table_peserta_id_peserta_users_id_fk": {
+          "name": "table_peserta_id_peserta_users_id_fk",
+          "tableFrom": "table_peserta",
+          "tableTo": "users",
+          "columnsFrom": [
+            "id_peserta"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.users": {
       "name": "users",
       "schema": "",
@@ -1288,8 +1459,8 @@
       "name": "absensi_peserta",
       "schema": "public",
       "values": [
-        "Hadir",
-        "Tidak Hadir"
+        "Validasi",
+        "Belum Validasi"
       ]
     },
     "public.jenis_kelamin": {
