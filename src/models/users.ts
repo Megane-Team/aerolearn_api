@@ -14,6 +14,7 @@ export const users = pgTable("users", {
     id_eksternal: integer().references(() => eksternal.id),
     email: text().notNull().unique(),
     password: text().notNull(),
+    nama: text().notNull(),
     user_role: userRole().notNull(),
     user_type: userType().notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)

@@ -7,7 +7,7 @@ import { users } from "./users.ts";
 export const nilai = pgTable("nilai", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     id_peserta: integer().notNull().references(() => users.id),
-    id_pelatihan: integer().notNull().references(() => pelaksanaanPelatihan.id),
+    id_pelaksanaan_pelatihan: integer().notNull().references(() => pelaksanaanPelatihan.id),
     score: integer().notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 });

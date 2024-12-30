@@ -1,7 +1,6 @@
 import { not, sql } from "drizzle-orm";
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { pelaksanaanPelatihan } from "./rancangan_pelatihan.ts";
 import { users } from "./users.ts";;
 
 export const notifications = pgTable("notifications", {

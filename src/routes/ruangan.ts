@@ -26,12 +26,6 @@ export const route = (instance: typeof server) => {
             }
         }, async (req) => {
             const res = await db.select().from(ruangan).execute();
-            if (!res) {
-                return {
-                    statusCode: 401,
-                    message: "materi not found"
-                };
-            }
             return {
                 statusCode: 200,
                 message: "Success",

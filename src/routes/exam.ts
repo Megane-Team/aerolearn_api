@@ -1,13 +1,13 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
-import { exam, examSchema } from "@/models/exam.ts";
+import { questionTable, questionSchema } from "@/models/question.ts";
 import { jawaban, jawabanSchema } from "@/models/jawaban.ts";
 import { jawabanBenar, jawabanBenarSchema } from "@/models/jawaban_benar.ts";
-import { materi, materiSchema } from "@/models/materi.ts";
 import { opsiJawaban, opsiJawabanSchema } from "@/models/opsi_jawaban.ts";
 import { db } from "@/modules/database.ts";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { exam, examSchema } from "@/models/exam.ts";
 
 export const prefix = "/exam";
 
@@ -15,7 +15,7 @@ export const route = (instance : typeof server) => { instance
     .get("/:id", { //id pelatihan
         preHandler: [instance.authenticate],
         schema:{
-            description: "get exam by id_training",
+            description: "get question by id_training",
             tags: ["getAll"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
@@ -32,19 +32,19 @@ export const route = (instance : typeof server) => { instance
         }
     }, async (req) => {
         const {id} = req.params;
-        const res = await db.select().from(exam).where(eq(exam.id_pelatihan, Number(id))).execute();
-        if(!res){   
+        const examRes = await db.select().from(exam).where(eq(exam.id_pelatihan, Number(id))).execute();
+        if(!examRes){   
             return{
                 statusCode: 401,
-                message: "exam not found",
+                message: "question not found",
             }
         }
         return{
             statusCode: 200,
             message: "Success",
-            data: res,
+            data: examRes,
         }
-    }).get("/option/:id", { // id exam
+    }).get("/question/option/:id", { // id question
         preHandler: [instance.authenticate],
         schema:{
             description: "get answer options",
@@ -64,7 +64,7 @@ export const route = (instance : typeof server) => { instance
         }
     }, async (req) => {
         const {id} = req.params;
-        const res = await db.select().from(opsiJawaban).where(eq(opsiJawaban.id_exam, Number(id))).execute();
+        const res = await db.select().from(opsiJawaban).where(eq(opsiJawaban.id_question, Number(id))).execute();
         if(!res){   
             return{
                 statusCode: 401,
@@ -76,15 +76,18 @@ export const route = (instance : typeof server) => { instance
             message: "Success",
             data: res,
         }
-    }).post("/+",{
+    }).post("/question/+",{
         preHandler: [instance.authenticate],
             schema: {
-                description: "adding exam",
+                description: "adding question",
                 tags: ["adding"],
                 headers: z.object({
                     authorization: z.string().transform((v) => v.replace("Bearer ", ""))
                 }),
-                body: examSchema.insert,
+                body: z.object({
+                    id_pelatihan: z.number(),
+                    question: z.string(),
+                }),
                 response: {
                     200: genericResponse(200),
                     401: genericResponse(401)
@@ -92,19 +95,19 @@ export const route = (instance : typeof server) => { instance
             }
         }, async (req) => {
             const {question, id_pelatihan} = req.body;
-    
-            const examGet = await db.select().from(exam).where(eq(exam.question, question)).execute();
+            const getExam = await db.select().from(exam).where(eq(exam.id_pelatihan, id_pelatihan)).execute();
+            const questionGet = await db.select().from(questionTable).where(eq(questionTable.question, question)).execute();
             
-            if(examGet.length > 0){
+            if(questionGet.length > 0){
                 return{
                     statusCode: 401,
-                    message: "exam is already exist",
+                    message: "question is already exist",
                 }
             }
     
-            await db.insert(exam).values({
+            await db.insert(questionTable).values({
                 question,
-                id_pelatihan,
+                id_exam: getExam[0].id,
                 createdAt: new Date(),
             }).execute();
             
@@ -113,7 +116,7 @@ export const route = (instance : typeof server) => { instance
                 message: "Success",
             }
         }
-    ).post("/opsi/+",{
+    ).post("/question/opsi/+",{
         preHandler: [instance.authenticate],
             schema: {
                 description: "adding answer options",
@@ -128,10 +131,10 @@ export const route = (instance : typeof server) => { instance
                 }
             }
         }, async (req) => {
-            const {jawaban, id_exam} = req.body;
-            const examGet = await db.select().from(opsiJawaban).where(eq(opsiJawaban.id_exam, id_exam)).execute();
+            const {jawaban, id_question} = req.body;
+            const questionGet = await db.select().from(opsiJawaban).where(eq(opsiJawaban.id_question, id_question)).execute();
             
-            if(examGet.length > 0){
+            if(questionGet.length > 0){
                 return{
                     statusCode: 401,
                     message: "answer options is already exist",
@@ -140,7 +143,7 @@ export const route = (instance : typeof server) => { instance
     
             await db.insert(opsiJawaban).values({
                 jawaban,
-                id_exam,
+                id_question,
                 createdAt: new Date(),
             }).execute();
             
@@ -149,7 +152,7 @@ export const route = (instance : typeof server) => { instance
                 message: "Success",
             }
         }
-    ).post("/true_answer/+",{
+    ).post("/question/true_answer/+",{
         preHandler: [instance.authenticate],
             schema: {
                 description: "adding true answer",
@@ -164,10 +167,10 @@ export const route = (instance : typeof server) => { instance
                 }
             }
         }, async (req) => {
-            const {text, id_exam} = req.body;
-            const examGet = await db.select().from(jawabanBenar).where(eq(jawabanBenar.id_exam, id_exam)).execute();
+            const {text, id_question} = req.body;
+            const questionGet = await db.select().from(jawabanBenar).where(eq(jawabanBenar.id_question, id_question)).execute();
             
-            if(examGet.length > 0){
+            if(questionGet.length > 0){
                 return{
                     statusCode: 401,
                     message: "true answer is already exist",
@@ -175,7 +178,7 @@ export const route = (instance : typeof server) => { instance
             }
             await db.insert(jawabanBenar).values({
                 text,
-                id_exam,
+                id_question,
                 createdAt: new Date(),
             }).execute();
             
@@ -184,52 +187,59 @@ export const route = (instance : typeof server) => { instance
                 message: "Success",
             }
         }
-    ).post("/jawaban/+",{
+    ).post("/question/jawaban/:id?", {
         preHandler: [instance.authenticate],
-            schema: {
-                description: "adding answer by trainee",
-                tags: ["adding"],
-                headers: z.object({
-                    authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-                }),
-                body: jawabanSchema.insert,
-                response: {
-                    200: genericResponse(200),
-                    401: genericResponse(401)
-                }
-            }
-        }, async (req) => {
-            const {id_opsi_jawaban, jawaban_benar, id_peserta, id_exam} = req.body;
-            const res = await db.select().from(jawabanBenar).where(eq(jawabanBenar.id_exam, id_exam)).execute();
-            const option = await db.select().from(opsiJawaban).where(eq(opsiJawaban.id_exam, id_exam)).execute();
-
-            if(option[0].jawaban == res[0].text){
-                await db.insert(jawaban).values({
-                    id_opsi_jawaban,
-                    id_peserta,
-                    jawaban_benar,
-                    is_benar: "benar",
-                    id_exam,
-                    createdAt: new Date(),
-                }).execute();
-            }else{
-                await db.insert(jawaban).values({
-                    id_opsi_jawaban,
-                    id_peserta,
-                    jawaban_benar,
-                    is_benar: "salah",
-                    id_exam,
-                    createdAt: new Date(),
-                }).execute();
-            }
-            
-            
-            return{
-                statusCode: 200,
-                message: "Success",
+        schema: {
+            description: "adding or updating answer by trainee",
+            tags: ["adding", "updating"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            params: z.object({
+                id: z.string().optional()
+            }),
+            body: jawabanSchema.insert,
+            response: {
+                200: genericResponse(200),
+                401: genericResponse(401)
             }
         }
-    ).get("/jawaban/:id",{ // id_peserta
+    }, async (req) => {
+        const { id } = req.params;
+        const { id_opsi_jawaban, id_peserta, id_question, id_pelaksanaan_pelatihan } = req.body;
+        const res = await db.select().from(jawabanBenar).where(eq(jawabanBenar.id_question, id_question)).execute();
+        const option = await db.select().from(opsiJawaban).where(eq(opsiJawaban.id, id_opsi_jawaban)).execute();
+    
+        const isBenar = option[0].jawaban === res[0].text ? "benar" : "salah";
+    
+        if (id) {
+            // Update existing answer
+            await db.update(jawaban).set({
+                id_opsi_jawaban,
+                id_peserta,
+                jawaban_benar: res[0].id,
+                id_pelaksanaan_pelatihan,
+                is_benar: isBenar,
+                id_question,
+            }).where(eq(jawaban.id, Number(id))).execute();
+        } else {
+            // Insert new answer
+            await db.insert(jawaban).values({
+                id_opsi_jawaban,
+                id_peserta,
+                jawaban_benar: res[0].id,
+                id_pelaksanaan_pelatihan,
+                is_benar: isBenar,
+                id_question,
+                createdAt: new Date(),
+            }).execute();
+        }
+    
+        return {
+            statusCode: 200,
+            message: "Success",
+        };
+    }).get("/question/jawaban/:id",{ // id_peserta
         preHandler: [instance.authenticate],
             schema: {
                 description: "get answer by trainee",
@@ -237,7 +247,6 @@ export const route = (instance : typeof server) => { instance
                 headers: z.object({
                     authorization: z.string().transform((v) => v.replace("Bearer ", ""))
                 }),
-                // body: z.array(jawabanSchema.select),
                 params: z.object({
                     id: z.string(),
                 }),
@@ -248,7 +257,7 @@ export const route = (instance : typeof server) => { instance
             }
         }, async (req) => {
             const id = req.params;
-            const res = db.select().from(jawaban).where(eq(jawaban.id_peserta, Number(id))).execute();
+            const res = await db.select().from(jawaban).where(eq(jawaban.id_peserta, Number(id))).execute();
             
             return{
                 statusCode: 200,

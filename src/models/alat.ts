@@ -1,12 +1,11 @@
 import { sql } from "drizzle-orm";
 import { integer, pgTable, timestamp, text } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { pelatihan } from "./pelatihan.ts";
+import { tableAlat } from "./listAlat.ts";
 
 export const alat = pgTable("alat", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     nama: text().notNull(),
-    id_pelatihan: integer().notNull().references(() => pelatihan.id),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 });
 

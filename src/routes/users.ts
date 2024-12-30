@@ -5,7 +5,7 @@ import { users, userSchema } from "@/models/users.ts";
 import { db } from "@/modules/database.ts";
 import { eq, or, sql } from "drizzle-orm";
 import { z } from "Zod";
-import { UserRole, UserType } from "@/utils/user_type.ts";
+import { UserRole, UserType } from "@/utils/enum_check.ts";
 import argon2, { argon2id } from "argon2";
 import { eksternal } from "@/models/data_eksternal.ts";
 
@@ -14,14 +14,16 @@ const userSchemaId = z.object({
     id: z.number(),
     nama: z.string(),
     email: z.string(),
-    password: z.string(),
-    user_role: z.string()
+    user_role: z.string(),
+    no_telp: z.string().nullable(),
+    tempat_lahir: z.string(),
+    tanggal_lahir: z.string()
 });
 
 interface User {
     id: number;
-    user_type: UserType;
     user_role: UserRole;
+    user_type: UserType,
 }
 
 export const route = (instance: typeof server) => {
@@ -82,7 +84,7 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { email, password, user_role, user_type, id_karyawan, id_eksternal } = req.body;
+            const { email, password, nama, user_role, user_type, id_karyawan, id_eksternal } = req.body;
 
             const user = await db.select().from(users).where(
                 or(
@@ -107,6 +109,7 @@ export const route = (instance: typeof server) => {
                 id_eksternal,
                 email,
                 password: hashPass,
+                nama,
                 user_role,
                 user_type,
                 createdAt: new Date()
@@ -116,7 +119,8 @@ export const route = (instance: typeof server) => {
                 statusCode: 200,
                 message: "Registration Success"
             };
-        }).get("/profile", {
+        }
+    ).get("/profile", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get user profile",
@@ -135,30 +139,31 @@ export const route = (instance: typeof server) => {
             const user = req.user as User;
             const user_type = user.user_type ? user.user_type.toString() : null;
             const id = user.id ? user.id.toString() : null;
-            let joinTable, joinCondition, namaField, emailField; 
+            let joinTable, joinCondition, tempat_lahirField, tanggal_lahirField, no_telpField; 
+            
             if (user_type === UserType.Internal) { 
                 joinTable = karyawan; 
                 joinCondition = eq(users.id_karyawan, karyawan.id); 
-                namaField = karyawan.nama; 
+                tempat_lahirField = karyawan.tempat_lahir;
+                tanggal_lahirField = karyawan.tanggal_lahir;
+                no_telpField = karyawan.no_telp;
             } else { 
                 joinTable = eksternal; 
-                joinCondition = eq(users.id_eksternal, eksternal.id); namaField = eksternal.nama; emailField = eksternal.email; 
+                joinCondition = eq(users.id_eksternal, eksternal.id);
+                tempat_lahirField = eksternal.tempat_lahir; 
+                tanggal_lahirField = eksternal.tanggal_lahir; 
+                no_telpField = eksternal.no_telp;
             } 
             
             const dataUser = await db.select({ 
-                id: users.id, 
-                password: users.password, 
+                id: users.id,  
                 user_role: users.user_role, 
-                nama: namaField, 
+                nama: users.nama, 
                 email: users.email, 
+                tempat_lahir: tempat_lahirField,
+                tanggal_lahir: tanggal_lahirField,
+                no_telp: no_telpField,
             }).from(users).innerJoin(joinTable, joinCondition).where(eq(users.id, Number(id))).execute();
-
-            if (!dataUser) {
-                return {
-                    statusCode: 401,
-                    message: "User profile not found"
-                };
-            }
 
             return {
                 statusCode: 200,
@@ -167,3 +172,4 @@ export const route = (instance: typeof server) => {
             };
         });
 };
+

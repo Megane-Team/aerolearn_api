@@ -52,7 +52,7 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { nama, alamat, no_telp, jenis_kelamin, email, tempat_tanggal_lahir } = req.body;
+            const { nama, alamat, no_telp, jenis_kelamin, email, tempat_lahir, tanggal_lahir } = req.body;
 
             const trainee = await db.select().from(eksternal).where(eq(eksternal.nama, nama)).execute();
 
@@ -68,7 +68,8 @@ export const route = (instance: typeof server) => {
                 email,
                 alamat,
                 no_telp,
-                tempat_tanggal_lahir,
+                tempat_lahir,
+                tanggal_lahir,
                 jenis_kelamin,
                 createdAt: new Date()
             }).execute();

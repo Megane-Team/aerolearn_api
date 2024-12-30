@@ -1,7 +1,7 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { permintaanTraining, permintaanTrainingSchema } from "@/models/draft_permintaan_training.ts";
-import { exam } from "@/models/exam.ts";
+import { questionTable} from "@/models/question.ts";
 import { jawaban } from "@/models/jawaban.ts";
 import { materi, materiSchema } from "@/models/materi.ts";
 import { nilai, nilaiSchema } from "@/models/nilai.ts";
@@ -42,7 +42,7 @@ export const route = (instance: typeof server) => {
                 message: "Success",
                 data: res
             };
-        }).post("/update", {
+        }).put("/update", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "update draft",

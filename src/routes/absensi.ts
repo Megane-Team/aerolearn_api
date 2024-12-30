@@ -2,7 +2,7 @@ import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { absensi, absensiSchema } from "@/models/absensi.ts";
 import { db } from "@/modules/database.ts";
-import { and, eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { z } from "zod";
 
 export const prefix = "/absensi";
@@ -30,14 +30,8 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const id = req.params;
+            const {id} = req.params;
             const res = await db.select().from(absensi).where(eq(absensi.id_pelaksanaan_pelatihan, Number(id))).execute();
-            if (!res) {
-                return {
-                    statusCode: 401,
-                    message: "peserta not found"
-                };
-            }
             return {
                 statusCode: 200,
                 message: "Success",
@@ -51,28 +45,43 @@ export const route = (instance: typeof server) => {
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
-                body: absensiSchema.insert,
+                body: z.object({
+                    id_materi: z.union([z.number(), z.null()]),
+                    id_exam: z.union([z.number(), z.null()]),
+                    id_pelaksanaan_pelatihan: z.number(),
+                }),
                 response: {
                     200: genericResponse(200),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const {id_materi, id_pelaksanaan_pelatihan, id_peserta} = req.body;
-
-            const res = await db.select().from(absensi).where(eq(absensi.id_pelaksanaan_pelatihan, id_pelaksanaan_pelatihan)).execute();
+            const {id_materi, id_exam, id_pelaksanaan_pelatihan} = req.body;
+            const user = req.user as User;
+            const id = user.id ? user.id.toString() : null;
+            const res = await db.select().from(absensi).where(
+                and(
+                    eq(absensi.id_peserta, Number(id)),
+                    or(
+                        eq(absensi.id_materi, Number(id_materi)),
+                        eq(absensi.id_exam, Number(id_exam))
+                    ),
+                    eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan)),
+                )
+            ).execute();
 
             if (res.length > 0) {
                 return {
                     statusCode: 401,
-                    message: "trainee is already exist"
+                    message: "trainee is already absen"
                 };
             }
 
             await db.insert(absensi).values({
-                id_pelaksanaan_pelatihan,
-                id_materi,
-                id_peserta,
+                id_pelaksanaan_pelatihan: Number(id_pelaksanaan_pelatihan),
+                id_materi: id_materi,
+                id_exam: id_exam,
+                id_peserta: Number(id),
                 status_absen: "Belum Validasi",
                 createdAt: new Date()
             }).execute();
@@ -82,11 +91,11 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-    ).post("/validasi", {
+    ).put("/validasi", {
         preHandler: [instance.authenticate],
         schema: {
             description: "absensi trainee",
-            tags: ["adding"],
+            tags: ["update"],
             headers: z.object({
                 authorization: z.string().transform(v => v.replace("Bearer ", ""))
             }),
@@ -98,7 +107,6 @@ export const route = (instance: typeof server) => {
         }
     }, async (req) => {
         const {id} = req.body;
-
         await db.update(absensi).set({
             status_absen: "Validasi",
         }).where(eq(absensi.id, Number(id))).execute();
@@ -108,7 +116,7 @@ export const route = (instance: typeof server) => {
             message: "Success"
         };
     }
-).get("/materi/:id", {
+).get("/materi/:id/:id_pelaksanaan_pelatihan", {
     preHandler: [instance.authenticate],
     schema: {
         description: "get absensi",
@@ -117,21 +125,27 @@ export const route = (instance: typeof server) => {
             authorization: z.string().transform(v => v.replace("Bearer ", ""))
         }),
         params: z.object({
-            id: z.string()
+            id: z.string(),
+            id_pelaksanaan_pelatihan: z.string(),
         }),
         response: {
             200: genericResponse(200).merge(z.object({
-                data: z.array(absensiSchema.select),
+                status_absen: z.string(),
             })),
             401: genericResponse(401)
         }
     }
     }, async (req) => { 
-    const idMateri = req.params;
+    const {id, id_pelaksanaan_pelatihan} = req.params;
     const user = req.user as User;
-    const id = user.id ? user.id.toString() : null;
-    const res = await db.select().from(absensi).where(and(eq(absensi.id_peserta, Number(id)), eq(absensi.id_materi, Number(idMateri)))).execute();
-    if (!res) {
+    const idUser = user.id ? user.id.   toString() : null;
+    const res = await db.select().from(absensi).where(
+        and(
+        eq(absensi.id_peserta, Number(idUser)), 
+        eq(absensi.id_materi, Number(id)), 
+        eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))
+    )).execute();
+    if (!res || res.length === 0) {
         return {
             statusCode: 401,
             message: "absensi not found"
@@ -140,7 +154,48 @@ export const route = (instance: typeof server) => {
     return {
         statusCode: 200,
         message: "Success",
-        data: res,
+        status_absen: res[0].status_absen,
+    };
+}).get("/exam/:id/:id_pelaksanaan_pelatihan", {
+    preHandler: [instance.authenticate],
+    schema: {
+        description: "get absensi",
+        tags: ["getDetail"],
+        headers: z.object({
+            authorization: z.string().transform(v => v.replace("Bearer ", ""))
+        }),
+        params: z.object({
+            id: z.string(),
+            id_pelaksanaan_pelatihan: z.string(),
+        }),
+        response: {
+            200: genericResponse(200).merge(z.object({
+                status_absen: z.string(),
+            })),
+            401: genericResponse(401)
+        }
+    }
+    }, async (req) => { 
+    const {id, id_pelaksanaan_pelatihan} = req.params;
+    const user = req.user as User;
+    const idUser = user.id ? user.id.toString() : null;
+    const res = await db.select().from(absensi).where(
+        and(
+            eq(absensi.id_peserta, Number(idUser)),
+            eq(absensi.id_exam, Number(id)),
+            eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))
+        )
+    ).execute();
+    if (!res || res.length === 0) {
+        return {
+            statusCode: 401,
+            message: "absensi not found"
+        };
+    }
+    return {
+        statusCode: 200,
+        message: "Success",
+        status_absen: res[0].status_absen,
     };
 })
 };
