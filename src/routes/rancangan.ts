@@ -2,16 +2,13 @@ import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { permintaanTraining } from "@/models/draft_permintaan_training.ts";
 import { pelaksanaanPelatihan, pelaksanaanPelatihanSchema } from "@/models/rancangan_pelatihan.ts";
+import { ruangan, statusRuangan } from "@/models/ruangan.ts";
 import { tablePeserta } from "@/models/table_peserta.ts";
 import { db } from "@/modules/database.ts";
 import { eq } from "drizzle-orm";
-import { QueryResult } from "pg";
 import { z } from "zod";
 
 export const prefix = "/rancangan";
-interface User {
-    id: number;
-}
 
 export const route = (instance: typeof server) => {
     instance
@@ -32,12 +29,6 @@ export const route = (instance: typeof server) => {
             }
         }, async (req) => {
             const res = await db.select().from(pelaksanaanPelatihan).execute();
-            if (!res) {
-                return {
-                    statusCode: 401,
-                    message: "rancangan training not found"
-                };
-            }
             return {
                 statusCode: 200,
                 message: "Success",
@@ -59,11 +50,12 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id_pelatihan, id_instruktur, id_ruangan, tanggal, jam_mulai, jam_selesai, jenis_training} = req.body;
+            const { id_pelatihan, id_instruktur, id_ruangan, tanggal_mulai, tanggal_selesai, jam_mulai, jam_selesai, jenis_training} = req.body;
             const result = await db.insert(pelaksanaanPelatihan).values({ 
                 id_pelatihan, 
                 id_instruktur, 
-                tanggal, 
+                tanggal_mulai,
+                tanggal_selesai, 
                 jam_mulai, 
                 jam_selesai, 
                 jenis_training, 
@@ -78,12 +70,17 @@ export const route = (instance: typeof server) => {
                 id_pelaksanaanPelatihan,
                 status: "menunggu",
             })
+
+            await db.update(ruangan).set({
+                status_ruangan: "dipakai"
+            }).where(eq(ruangan.id, Number(id_ruangan))).execute();
+
             return {
                 statusCode: 200,
                 message: "Success"
             };
         }
-        ).post("/update", {
+        ).put("/update", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "update rancangan training",
@@ -98,12 +95,12 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const {id} = req.body;
-            const { id_instruktur, id_ruangan, tanggal} = req.body;
+            const { id, id_instruktur, id_ruangan, tanggal_mulai, tanggal_selesai} = req.body;
 
             await db.update(pelaksanaanPelatihan).set({
                 id_instruktur,
-                tanggal,
+                tanggal_mulai,
+                tanggal_selesai,
                 id_ruangan,
             }).where(eq(pelaksanaanPelatihan.id, Number(id))).execute();
             return {
@@ -111,7 +108,7 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-        ).post("/delete", {
+        ).delete("/delete", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "delete rancangan training",
@@ -135,7 +132,7 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-        ).post("/selesai:id", {
+        ).put("/selesai", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "update training",
@@ -143,28 +140,25 @@ export const route = (instance: typeof server) => {
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
-                params: z.object({
+                body: z.object({
                     id: z.string(),
                 }),
-                body: pelaksanaanPelatihanSchema.insert,
                 response: {
                     200: genericResponse(200),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const id = req.params;
-            const { is_selesai } = req.body;
-
+            const {id} = req.body;
             await db.update(pelaksanaanPelatihan).set({
-                is_selesai,
+                is_selesai: "selesai",
             }).where(eq(pelaksanaanPelatihan.id, Number(id))).execute();
             return {
                 statusCode: 200,
                 message: "Success"
             };
         }
-        ).get("detail/:id", {
+        ).get("/detail/:id", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get training detail",

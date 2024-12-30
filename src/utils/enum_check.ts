@@ -12,5 +12,5 @@ export enum UserRole {
 
 export enum jenisTraining {
     mandatory = "mandatory",
-    basic= "basic",
+    basic = "basic",
 }

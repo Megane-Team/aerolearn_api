@@ -1,8 +1,8 @@
-import fastify, { FastifyInstance } from "fastify";
+import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { serializerCompiler, validatorCompiler, ZodTypeProvider, jsonSchemaTransform } from "fastify-type-provider-zod";
 import { readFileSync } from "fs";
 import { readdir } from "fs/promises";
-import { resolve } from "path";
+import { join, resolve } from "path";
 import { port, host, databaseUrl } from "./config.js";
 import pg from "pg";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -138,9 +138,9 @@ server.addHook("preSerialization", async (req, rep, payload: Record<string, unkn
     return { ...newPayload, ...payload };
 });
 
-server.register(fastifyStatic, {
-    root: resolve(import.meta.dirname, 'public/docs'),
-    prefix: '/docs/',
+server.register(fastifyStatic, { 
+    root: resolve(import.meta.dirname, 'public/'), 
+    prefix: '/public/',  
     constraints: {host: 'localhost:3000'}
 });
 

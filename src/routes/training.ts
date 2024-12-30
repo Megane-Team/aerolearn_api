@@ -1,5 +1,6 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
+import { exam } from "@/models/exam.ts";
 import { pelatihan, pelatihanSchema } from "@/models/pelatihan.ts";
 import { db } from "@/modules/database.ts";
 import { eq } from "drizzle-orm";
@@ -26,12 +27,6 @@ export const route = (instance: typeof server) => {
             }
         }, async (req) => {
             const res = await db.select().from(pelatihan).execute();
-            if (!res) {
-                return {
-                    statusCode: 401,
-                    message: "data training not found"
-                };
-            }
             return {
                 statusCode: 200,
                 message: "Success",
@@ -64,14 +59,19 @@ export const route = (instance: typeof server) => {
                 };
             }
 
-            await db.insert(pelatihan).values({
+            const res = await db.insert(pelatihan).values({
                 nama,
                 deskripsi,
                 kategori,
                 koordinator,
                 createdAt: new Date()
-            }).execute();
+            }).returning().execute();
 
+            const id_pelatihan = res[0].id;
+
+            await db.insert(exam).values({
+                id_pelatihan,
+            })
             return {
                 statusCode: 200,
                 message: "Success"
@@ -98,14 +98,6 @@ export const route = (instance: typeof server) => {
         }, async (req) => {
             const id = req.params.id;
             const trainingDetail = await db.select().from(pelatihan).where(eq(pelatihan.id, Number(id))).execute();
-
-            if (!trainingDetail || trainingDetail.length === 0) {
-                return {
-                    statusCode: 401,
-                    message: "data not found"
-                };
-            }
-
             return {
                 statusCode: 200,
                 message: "training detail retrieved successfully",

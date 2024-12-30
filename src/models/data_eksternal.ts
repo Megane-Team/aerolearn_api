@@ -9,7 +9,8 @@ export const eksternal = pgTable("eksternal", {
     email: text().notNull(),
     alamat: text().notNull(),
     no_telp: text().notNull(),
-    tempat_tanggal_lahir: text().notNull(),
+    tempat_lahir: text().notNull(),
+    tanggal_lahir: text().notNull(),
     jenis_kelamin: jenis_kelamin().notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 });

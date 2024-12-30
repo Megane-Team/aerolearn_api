@@ -1,13 +1,12 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
-import { permintaanTraining, permintaanTrainingSchema } from "@/models/draft_permintaan_training.ts";
+import { permintaanTraining } from "@/models/draft_permintaan_training.ts";
 import { pelatihan } from "@/models/pelatihan.ts";
-import { jenis_training, pelaksanaanPelatihan, pelaksanaanPelatihanSchema } from "@/models/rancangan_pelatihan.ts";
+import {  pelaksanaanPelatihan } from "@/models/rancangan_pelatihan.ts";
 import { ruangan } from "@/models/ruangan.ts";
 import { tablePeserta, tablePesertaSchema } from "@/models/table_peserta.ts";
-import { users } from "@/models/users.ts";
+import { users, userType } from "@/models/users.ts";
 import { db } from "@/modules/database.ts";
-import { jenisTraining } from "@/utils/user_type.ts";
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
@@ -18,7 +17,8 @@ interface User {
 
 const progressSchemaId = z.object({
     id: z.number(),
-    tanggal: z.string(),
+    tanggal_mulai: z.string(),
+    tanggal_selesai: z.string(),
     jamMulai: z.string(),
     jamSelesai: z.string(),
     isSelesai: z.string(),
@@ -56,7 +56,7 @@ export const route = (instance: typeof server) => {
                     statusCode: 401,
                     message: "peserta not found not found"
                 };
-            }
+            }   
             return {
                 statusCode: 200,
                 message: "Success",
@@ -99,13 +99,16 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-    ).get("/progress", {
+    ).get("/progress/:id", {
         preHandler: [instance.authenticate],
         schema: {
             description: "get all data trainee",
             tags: ["getAll"],
             headers: z.object({
                 authorization: z.string().transform(v => v.replace("Bearer ", ""))
+            }),
+            params: z.object({ 
+                id: z.string(),
             }),
             response: {
                 200: genericResponse(200).merge(z.object({
@@ -115,41 +118,34 @@ export const route = (instance: typeof server) => {
             }
         }
     }, async (req) => {
-        const user = req.user as User;
-        const id = user.id ? user.id.toString() : null;
+        const id = req.params.id;
         const res = await db.select()
         .from(tablePeserta)
         .where(eq(tablePeserta.id_peserta, Number(id)))
         .execute();
-
-        if (!res) {
-            return {
-                statusCode: 401,
-                message: "pelatihan not found"
-            };
-        }
         
         const id_pelaksanaan_pelatihan = res.map(item => item.id_pelaksanaan_pelatihan); 
         const training = await db.select().from(permintaanTraining).where(and( inArray(permintaanTraining.id_pelaksanaanPelatihan, id_pelaksanaan_pelatihan), eq(permintaanTraining.status, "terima") )).execute();
-        const ProgressRes = await db.select({
-            id: pelaksanaanPelatihan.id,
-            tanggal: pelaksanaanPelatihan.tanggal,
-            jamMulai: pelaksanaanPelatihan.jam_mulai,
-            jamSelesai: pelaksanaanPelatihan.jam_selesai,
-            isSelesai: pelaksanaanPelatihan.is_selesai,
-            jenis_training: pelaksanaanPelatihan.jenis_training,
-            nama_pelatihan: pelatihan.nama,
-            id_pelatihan: pelaksanaanPelatihan.id_pelatihan,
-            nama_instruktur: users.email,
-            ruangan: ruangan.nama,
-        })
-        .from(pelaksanaanPelatihan)
-        .innerJoin(pelatihan, eq(pelaksanaanPelatihan.id_pelatihan, pelatihan.id))
-        .innerJoin(users, eq(pelaksanaanPelatihan.id_instruktur, users.id))
-        .innerJoin(ruangan, eq(pelaksanaanPelatihan.id_ruangan, ruangan.id))
-        .where(inArray(pelaksanaanPelatihan.id, id_pelaksanaan_pelatihan))
-        .execute();
-    
+            const ProgressRes = await db.select({
+                id: pelaksanaanPelatihan.id,
+                tanggal_mulai: pelaksanaanPelatihan.tanggal_mulai,
+                tanggal_selesai: pelaksanaanPelatihan.tanggal_selesai,
+                jamMulai: pelaksanaanPelatihan.jam_mulai,
+                jamSelesai: pelaksanaanPelatihan.jam_selesai,
+                isSelesai: pelaksanaanPelatihan.is_selesai,
+                jenis_training: pelaksanaanPelatihan.jenis_training,
+                nama_pelatihan: pelatihan.nama,
+                id_pelatihan: pelaksanaanPelatihan.id_pelatihan,
+                nama_instruktur:  users.nama,
+                ruangan: ruangan.nama,
+            })
+            .from(pelaksanaanPelatihan)
+            .innerJoin(pelatihan, eq(pelaksanaanPelatihan.id_pelatihan, pelatihan.id))
+            .innerJoin(users, eq(pelaksanaanPelatihan.id_instruktur, users.id))
+            .innerJoin(ruangan, eq(pelaksanaanPelatihan.id_ruangan, ruangan.id))
+            .where(inArray(pelaksanaanPelatihan.id, id_pelaksanaan_pelatihan))
+            .execute();
+        
         const filteredProgressRes = ProgressRes.filter(item => 
             training.some(train => train.id_pelaksanaanPelatihan === item.id)
         );

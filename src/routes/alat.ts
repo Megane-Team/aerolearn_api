@@ -1,6 +1,7 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { alat, alatSchema } from "@/models/alat.ts";
+import { tableAlat, tableAlatSchema } from "@/models/listAlat.ts";
 import { ruangan, ruanganSchema } from "@/models/ruangan.ts";
 import { db } from "@/modules/database.ts";
 import { eq } from "drizzle-orm";
@@ -53,7 +54,7 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { nama, id_pelatihan } = req.body;
+            const { nama} = req.body;
             const alatId = await db.select().from(alat).where(eq(alat.nama, nama)).execute();
 
             if (alatId.length > 0) {
@@ -65,7 +66,6 @@ export const route = (instance: typeof server) => {
 
             await db.insert(alat).values({
                 nama,
-                id_pelatihan,
                 createdAt: new Date()
             }).execute();
 
@@ -74,7 +74,34 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-    ).get("/:id", { // id pelatihan
+    ).post("/tableAlat/+", {
+                preHandler: [instance.authenticate],
+                schema: {
+                    description: "adding trainee",
+                    tags: ["adding"],
+                    headers: z.object({
+                        authorization: z.string().transform(v => v.replace("Bearer ", ""))
+                    }),
+                    body: tableAlatSchema.insert,
+                    response: {
+                        200: genericResponse(200),
+                        401: genericResponse(401)
+                    }
+                }
+            }, async (req) => {
+                const {id_pelaksanaan_pelatihan, id_alat} = req.body;
+    
+                await db.insert(tableAlat).values({
+                    id_pelaksanaan_pelatihan,
+                    id_alat,
+                }).execute();
+    
+                return {
+                    statusCode: 200,
+                    message: "Success"
+                };
+            }
+        ).get("/:id", { // id pelatihan
         preHandler: [instance.authenticate],
         schema: {
             description: "get tool",
@@ -94,7 +121,7 @@ export const route = (instance: typeof server) => {
         }
     }, async (req) => {
         const id = req.params;
-        const res = await db.select().from(alat).where(eq(alat.id_pelatihan, Number(id))).execute();
+        const res = await db.select().from(tableAlat).where(eq(tableAlat.id_pelaksanaan_pelatihan, Number(id))).execute();
         if (!res) {
             return {
                 statusCode: 401,
