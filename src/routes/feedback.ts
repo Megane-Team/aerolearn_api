@@ -7,7 +7,7 @@ import { feedbackQuestion, feedbackQuestionSchema } from "@/models/feedbackquest
 import { feedback, feedbackSchema } from "@/models/feedback.ts";
 import { nilai } from "@/models/nilai.ts";
 import { Jimp, loadFont, measureText, measureTextHeight } from "jimp";
-import { SANS_64_BLACK, SANS_64_WHITE } from "jimp/fonts";
+import { SANS_64_BLACK } from "jimp/fonts";
 import { join } from "path";
 
 export const prefix = "/feedback";
