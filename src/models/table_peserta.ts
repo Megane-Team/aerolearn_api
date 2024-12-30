@@ -15,3 +15,4 @@ export const tablePesertaSchema = {
     insert: createInsertSchema(tablePeserta),
     select: createSelectSchema(tablePeserta),
 };
+        

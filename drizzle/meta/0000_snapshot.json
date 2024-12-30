@@ -1,5 +1,5 @@
 {
-  "id": "77586781-47ed-4ba4-b8de-cd4a93c9c926",
+  "id": "aff41fbe-ed8d-4e60-9294-62cd10c6018c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -540,8 +540,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "id_pelatihan": {
-          "name": "id_pelatihan",
+        "id_pelaksanaan_pelatihan": {
+          "name": "id_pelaksanaan_pelatihan",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -594,12 +594,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "jawaban_id_pelatihan_pelatihan_id_fk": {
-          "name": "jawaban_id_pelatihan_pelatihan_id_fk",
+        "jawaban_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk": {
+          "name": "jawaban_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk",
           "tableFrom": "jawaban",
-          "tableTo": "pelatihan",
+          "tableTo": "pelaksanaan_pelatihan",
           "columnsFrom": [
-            "id_pelatihan"
+            "id_pelaksanaan_pelatihan"
           ],
           "columnsTo": [
             "id"
@@ -985,8 +985,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "id_pelatihan": {
-          "name": "id_pelatihan",
+        "id_pelaksanaan_pelatihan": {
+          "name": "id_pelaksanaan_pelatihan",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -1020,12 +1020,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "nilai_id_pelatihan_pelaksanaan_pelatihan_id_fk": {
-          "name": "nilai_id_pelatihan_pelaksanaan_pelatihan_id_fk",
+        "nilai_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk": {
+          "name": "nilai_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk",
           "tableFrom": "nilai",
           "tableTo": "pelaksanaan_pelatihan",
           "columnsFrom": [
-            "id_pelatihan"
+            "id_pelaksanaan_pelatihan"
           ],
           "columnsTo": [
             "id"
@@ -1336,8 +1336,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "tanggal": {
-          "name": "tanggal",
+        "tanggal_mulai": {
+          "name": "tanggal_mulai",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tanggal_selesai": {
+          "name": "tanggal_selesai",
           "type": "date",
           "primaryKey": false,
           "notNull": true
@@ -1519,6 +1525,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "masa_berlaku": {
+          "name": "masa_berlaku",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1542,10 +1554,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "sertifikat_id_pelatihan_pelaksanaan_pelatihan_id_fk": {
-          "name": "sertifikat_id_pelatihan_pelaksanaan_pelatihan_id_fk",
+        "sertifikat_id_pelatihan_pelatihan_id_fk": {
+          "name": "sertifikat_id_pelatihan_pelatihan_id_fk",
           "tableFrom": "sertifikat",
-          "tableTo": "pelaksanaan_pelatihan",
+          "tableTo": "pelatihan",
           "columnsFrom": [
             "id_pelatihan"
           ],
