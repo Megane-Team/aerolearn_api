@@ -1,13 +1,10 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { permintaanTraining, permintaanTrainingSchema } from "@/models/draft_permintaan_training.ts";
-import { questionTable} from "@/models/question.ts";
-import { jawaban } from "@/models/jawaban.ts";
-import { materi, materiSchema } from "@/models/materi.ts";
-import { nilai, nilaiSchema } from "@/models/nilai.ts";
-import { sertifikat, sertifikatSchema } from "@/models/sertifikasi.ts";
+import { pelaksanaanPelatihan } from "@/models/rancangan_pelatihan.ts";
+import { ruangan } from "@/models/ruangan.ts";
 import { db } from "@/modules/database.ts";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 export const prefix = "/draft";
@@ -29,7 +26,7 @@ export const route = (instance: typeof server) => {
                     401: genericResponse(401)
                 }
             }
-        }, async (req) => {
+        }, async () => {
             const res = await db.select().from(permintaanTraining).execute();
             if (!res) {
                 return {
@@ -57,11 +54,35 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id, status} = req.body;
-             await db.update(permintaanTraining).set({
-                status: status,
-             }).where(eq(permintaanTraining.id, Number(id))).execute();
-             
+            const { id, status } = req.body;
+
+            const permintaan = await db.select().from(permintaanTraining).where(eq(permintaanTraining.id, Number(id))).execute();
+
+            if (!permintaan) {
+                return {
+                    statusCode: 401,
+                    message: "data not found"
+                };
+            }
+
+            if (status == "tolak"){
+                const training = await db.select().from(pelaksanaanPelatihan).where(eq(pelaksanaanPelatihan.id, permintaan[0].id_pelaksanaanPelatihan)).execute();
+                if (!training) {
+                    return {
+                        statusCode: 401,
+                        message: "data not found"
+                    };
+                }
+
+                await db.update(ruangan).set({
+                    status_ruangan: "tidak dipakai"
+                }).where(eq(ruangan.id, training[0].id_ruangan)).execute();
+            }
+
+            await db.update(permintaanTraining).set({
+                status: status
+            }).where(eq(permintaanTraining.id, Number(id))).execute();
+
             return {
                 statusCode: 200,
                 message: "Success"

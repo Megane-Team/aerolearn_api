@@ -19,5 +19,5 @@ export const absensi = pgTable("absensi_peserta", {
 
 export const absensiSchema = {
     insert: createInsertSchema(absensi),
-    select: createSelectSchema(absensi),
+    select: createSelectSchema(absensi)
 };

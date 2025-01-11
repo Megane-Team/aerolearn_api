@@ -7,7 +7,6 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 export const prefix = "/training";
-
 export const route = (instance: typeof server) => {
     instance
         .get("/", {
@@ -25,8 +24,15 @@ export const route = (instance: typeof server) => {
                     401: genericResponse(401)
                 }
             }
-        }, async (req) => {
+        }, async () => {
             const res = await db.select().from(pelatihan).execute();
+
+            if (res.length === 0) {
+                return {
+                    statusCode: 401,
+                    message: "training not found"
+                };
+            }
             return {
                 statusCode: 200,
                 message: "Success",
@@ -49,7 +55,6 @@ export const route = (instance: typeof server) => {
             }
         }, async (req) => {
             const { nama, koordinator, deskripsi, kategori } = req.body;
-
             const training = await db.select().from(pelatihan).where(eq(pelatihan.nama, nama)).execute();
 
             if (training.length > 0) {
@@ -70,14 +75,14 @@ export const route = (instance: typeof server) => {
             const id_pelatihan = res[0].id;
 
             await db.insert(exam).values({
-                id_pelatihan,
-            })
+                id_pelatihan
+            });
+                        
             return {
                 statusCode: 200,
                 message: "Success"
             };
-        }
-        ).get("/:id", {
+        }).get("/:id", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get training detail",

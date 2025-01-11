@@ -24,7 +24,7 @@ export const route = (instance: typeof server) => {
                     401: genericResponse(401)
                 }
             }
-        }, async (req) => {
+        }, async () => {
             const res = await db.select().from(ruangan).execute();
             return {
                 statusCode: 200,

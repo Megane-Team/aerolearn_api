@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { integer, pgTable, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, pgEnum, text, timestamp, date } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const jenis_kelamin = pgEnum("jenis_kelamin", ["L", "P"]);
@@ -10,7 +10,7 @@ export const eksternal = pgTable("eksternal", {
     alamat: text().notNull(),
     no_telp: text().notNull(),
     tempat_lahir: text().notNull(),
-    tanggal_lahir: text().notNull(),
+    tanggal_lahir: date().notNull(),
     jenis_kelamin: jenis_kelamin().notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 });
