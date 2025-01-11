@@ -1,7 +1,7 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { karyawan } from "@/models/karyawan.ts";
-import { users, userSchema } from "@/models/users.ts";
+import { users } from "@/models/users.ts";
 import { db } from "@/modules/database.ts";
 import { eq, or, sql } from "drizzle-orm";
 import { z } from "Zod";
@@ -23,7 +23,7 @@ const userSchemaId = z.object({
 interface User {
     id: number;
     user_role: UserRole;
-    user_type: UserType,
+    user_type: UserType;
 }
 
 export const route = (instance: typeof server) => {
@@ -34,7 +34,7 @@ export const route = (instance: typeof server) => {
                 tags: ["login"],
                 body: z.object({
                     email: z.string(),
-                    password: z.string(),
+                    password: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -77,50 +77,94 @@ export const route = (instance: typeof server) => {
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
-                body: userSchema.insert,
+                body: z.object({
+                    email: z.string(),
+                    password: z.string(),
+                    user_role: z.string(),
+                    id_karyawan: z.number().nullable(),
+                    id_eksternal: z.number().nullable()
+                }),
                 response: {
                     200: genericResponse(200),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const { email, password, nama, user_role, user_type, id_karyawan, id_eksternal } = req.body;
+            const { email, password, user_role, id_karyawan, id_eksternal } = req.body;
 
-            const user = await db.select().from(users).where(
+            let userInfo;
+
+            if (id_karyawan !== null && id_karyawan !== undefined) {
+                userInfo = await db.select({
+                    nama: karyawan.nama,
+                    email: karyawan.email
+                }).from(karyawan).where(eq(karyawan.id, id_karyawan)).execute();
+            }
+            else if (id_eksternal !== null && id_eksternal !== undefined) {
+                userInfo = await db.select({
+                    nama: eksternal.nama,
+                    email: eksternal.email
+                }).from(eksternal).where(eq(eksternal.id, id_eksternal)).execute();
+            }
+
+            if (!userInfo || userInfo.length === 0) {
+                return {
+                    statusCode: 400,
+                    message: "Invalid id_karyawan or id_eksternal"
+                };
+            }
+
+            const { nama } = userInfo[0];
+
+            if (!email) {
+                return {
+                    statusCode: 400,
+                    message: "Email is required"
+                };
+            }
+
+            const existingUser = await db.select().from(users).where(
                 or(
                     id_karyawan !== null && id_karyawan !== undefined ? eq(users.id_karyawan, id_karyawan) : sql`1=0`,
                     id_eksternal !== null && id_eksternal !== undefined ? eq(users.id_eksternal, id_eksternal) : sql`1=0`
                 )
             ).execute();
 
-            if (user.length > 0) {
+            if (existingUser.length > 0) {
                 return {
                     statusCode: 401,
-                    message: "user is already exist"
+                    message: "User already exists"
                 };
             }
-
             const hashPass = await argon2.hash(password, {
                 type: argon2id
             });
 
-            await db.insert(users).values({
-                id_karyawan,
-                id_eksternal,
+            const newUser: any = {
                 email,
                 password: hashPass,
                 nama,
                 user_role,
-                user_type,
+                user_type: id_karyawan !== null && id_karyawan !== undefined ? "internal" : "external",
                 createdAt: new Date()
-            }).execute();
+            };
+
+            if (id_karyawan !== null && id_karyawan !== undefined) {
+                newUser.id_karyawan = id_karyawan;
+            }
+
+            if (id_eksternal !== null && id_eksternal !== undefined) {
+                newUser.id_eksternal = id_eksternal;
+            }
+
+            await db.insert(users).values(newUser).execute();
 
             return {
                 statusCode: 200,
                 message: "Registration Success"
             };
         }
-    ).get("/profile", {
+        ).get("/profile", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get user profile",
@@ -139,37 +183,44 @@ export const route = (instance: typeof server) => {
             const user = req.user as User;
             const user_type = user.user_type ? user.user_type.toString() : null;
             const id = user.id ? user.id.toString() : null;
-            let joinTable, joinCondition, tempat_lahirField, tanggal_lahirField, no_telpField; 
-            
-            if (user_type === UserType.Internal) { 
-                joinTable = karyawan; 
-                joinCondition = eq(users.id_karyawan, karyawan.id); 
+            let joinTable, joinCondition, tempat_lahirField, tanggal_lahirField, no_telpField;
+
+            if (user_type === UserType.Internal) {
+                joinTable = karyawan;
+                joinCondition = eq(users.id_karyawan, karyawan.id);
                 tempat_lahirField = karyawan.tempat_lahir;
                 tanggal_lahirField = karyawan.tanggal_lahir;
                 no_telpField = karyawan.no_telp;
-            } else { 
-                joinTable = eksternal; 
+            }
+            else {
+                joinTable = eksternal;
                 joinCondition = eq(users.id_eksternal, eksternal.id);
-                tempat_lahirField = eksternal.tempat_lahir; 
-                tanggal_lahirField = eksternal.tanggal_lahir; 
+                tempat_lahirField = eksternal.tempat_lahir;
+                tanggal_lahirField = eksternal.tanggal_lahir;
                 no_telpField = eksternal.no_telp;
-            } 
-            
-            const dataUser = await db.select({ 
-                id: users.id,  
-                user_role: users.user_role, 
-                nama: users.nama, 
-                email: users.email, 
+            }
+
+            const dataUser = await db.select({
+                id: users.id,
+                user_role: users.user_role,
+                nama: users.nama,
+                email: users.email,
                 tempat_lahir: tempat_lahirField,
                 tanggal_lahir: tanggal_lahirField,
-                no_telp: no_telpField,
+                no_telp: no_telpField
             }).from(users).innerJoin(joinTable, joinCondition).where(eq(users.id, Number(id))).execute();
+
+            if (dataUser.length == 0) {
+                return {
+                    statusCode: 401,
+                    message: "profile not found"
+                };
+            }
 
             return {
                 statusCode: 200,
                 message: "User profile retrieved successfully",
-                data: dataUser[0],
+                data: dataUser[0]
             };
         });
 };
-

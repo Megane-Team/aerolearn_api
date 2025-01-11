@@ -8,13 +8,14 @@ import { questionTable } from "@/models/question.ts";
 import { pelaksanaanPelatihan } from "@/models/rancangan_pelatihan.ts";
 import { db } from "@/modules/database.ts";
 import { and, eq } from "drizzle-orm";
-import { number, z } from "zod";
+import { get } from "http";
+import { z } from "zod";
 
 export const prefix = "/nilai";
 
 export const route = (instance: typeof server) => {
     instance
-        .get("/:id_peserta/:id_pelaksanaan", { //id_pelatihan
+        .get("/:id_peserta/:id_pelaksanaan", { // id_pelatihan
             preHandler: [instance.authenticate],
             schema: {
                 description: "get score",
@@ -24,7 +25,7 @@ export const route = (instance: typeof server) => {
                 }),
                 params: z.object({
                     id_peserta: z.string(),
-                    id_pelaksanaan: z.string(),
+                    id_pelaksanaan: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -34,7 +35,7 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const {id_peserta, id_pelaksanaan} = req.params;
+            const { id_peserta, id_pelaksanaan } = req.params;
             const res = await db.select().from(nilai).where(and(eq(nilai.id_peserta, Number(id_peserta)), eq(nilai.id_pelaksanaan_pelatihan, Number(id_pelaksanaan)))).execute();
             if (res.length === 0) {
                 return {
@@ -55,39 +56,54 @@ export const route = (instance: typeof server) => {
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
-                body: nilaiSchema.insert,
+                body: z.object({
+                    id_peserta: z.number(),
+                    id_pelaksanaan_pelatihan: z.number()
+                }),
                 response: {
                     200: genericResponse(200),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const { id_peserta, id_pelaksanaan_pelatihan, score } = req.body;
-            // const getPelaksanaan = await db.select({
-            //     pelaksanaan: pelaksanaanPelatihan,
-            //     pelatihan: pelatihan,
-            //     exam: exam
-            // })
-            // .from(pelaksanaanPelatihan)
-            // .innerJoin(pelatihan, eq(pelaksanaanPelatihan.id_pelatihan, pelatihan.id))
-            // .innerJoin(exam, eq(pelatihan.id, exam.id_pelatihan))
-            // .where(eq(pelaksanaanPelatihan.id, id_pelaksanaan_pelatihan))
-            // .execute();
+            const { id_peserta, id_pelaksanaan_pelatihan } = req.body;
 
-            // const getExam = getPelaksanaan[0].exam;
-            // const [questions, correctAnswers] = await Promise.all([
-            //     db.select().from(questionTable).where(eq(questionTable.id_exam, getExam.id)).execute(),
-            //     db.select().from(jawaban).where(and(eq(jawaban.is_benar, 'benar'), eq(jawaban.id_question, getExam.id))).execute()
-            // ]);
+            const getNilai = await db.select().from(nilai).where(and(eq(nilai.id_peserta, id_peserta), eq(nilai.id_pelaksanaan_pelatihan, id_pelaksanaan_pelatihan))).execute();
 
-            // const totalQuestion = questions.length;
-            // const score = (correctAnswers.length / totalQuestion) * 100;
+            if (getNilai.length > 0) {
+                return {
+                    statusCode: 401,
+                    message: "score is already exist"
+                };
+            }
 
+            const getPelaksanaan = await db.select({
+                id_pelaksanaan: pelaksanaanPelatihan.id,
+                pelatihan: pelatihan,
+                id_exam: exam.id
+            })
+            .from(pelaksanaanPelatihan)
+            .innerJoin(pelatihan, eq(pelaksanaanPelatihan.id_pelatihan, pelatihan.id))
+            .innerJoin(exam, eq(pelatihan.id, exam.id_pelatihan))
+            .where(eq(pelaksanaanPelatihan.id, id_pelaksanaan_pelatihan))
+            .execute();
+
+            const [questions, correctAnswers] = await Promise.all([
+                db.select().from(questionTable).where(eq(questionTable.id_exam, getPelaksanaan[0].id_exam)).execute(),
+                db.select().from(jawaban) .innerJoin(questionTable, eq(jawaban.id_question, questionTable.id)).where(and(eq(jawaban.is_benar, 'benar'), eq(questionTable.id_exam, getPelaksanaan[0].id_exam))).execute()
+            ]);
+
+            const totalQuestion = questions.length;
+            console.log(totalQuestion);
+            console.log(correctAnswers.length)
+            
+            const score = (correctAnswers.length / totalQuestion) * 100;
+            console.log(score);
             await db.insert(nilai).values({
                 id_peserta,
-                id_pelaksanaan_pelatihan,
+                id_pelaksanaan_pelatihan : getPelaksanaan[0].id_pelaksanaan,
                 score,
-                createdAt: new Date(),
+                createdAt: new Date()
             }).execute();
 
             return {

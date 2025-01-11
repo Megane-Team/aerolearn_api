@@ -13,6 +13,5 @@ export const tablePeserta = pgTable("table_peserta", {
 
 export const tablePesertaSchema = {
     insert: createInsertSchema(tablePeserta),
-    select: createSelectSchema(tablePeserta),
+    select: createSelectSchema(tablePeserta)
 };
-        

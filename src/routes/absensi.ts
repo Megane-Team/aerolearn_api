@@ -30,7 +30,7 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const {id} = req.params;
+            const { id } = req.params;
             const res = await db.select().from(absensi).where(eq(absensi.id_pelaksanaan_pelatihan, Number(id))).execute();
             return {
                 statusCode: 200,
@@ -48,7 +48,7 @@ export const route = (instance: typeof server) => {
                 body: z.object({
                     id_materi: z.union([z.number(), z.null()]),
                     id_exam: z.union([z.number(), z.null()]),
-                    id_pelaksanaan_pelatihan: z.number(),
+                    id_pelaksanaan_pelatihan: z.number()
                 }),
                 response: {
                     200: genericResponse(200),
@@ -56,7 +56,7 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const {id_materi, id_exam, id_pelaksanaan_pelatihan} = req.body;
+            const { id_materi, id_exam, id_pelaksanaan_pelatihan } = req.body;
             const user = req.user as User;
             const id = user.id ? user.id.toString() : null;
             const res = await db.select().from(absensi).where(
@@ -66,7 +66,7 @@ export const route = (instance: typeof server) => {
                         eq(absensi.id_materi, Number(id_materi)),
                         eq(absensi.id_exam, Number(id_exam))
                     ),
-                    eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan)),
+                    eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))
                 )
             ).execute();
 
@@ -91,111 +91,112 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-    ).put("/validasi", {
-        preHandler: [instance.authenticate],
-        schema: {
-            description: "absensi trainee",
-            tags: ["update"],
-            headers: z.object({
-                authorization: z.string().transform(v => v.replace("Bearer ", ""))
-            }),
-            body: absensiSchema.insert,
-            response: {
-                200: genericResponse(200),
-                401: genericResponse(401)
+        ).put("/validasi", {
+            preHandler: [instance.authenticate],
+            schema: {
+                description: "absensi trainee",
+                tags: ["update"],
+                headers: z.object({
+                    authorization: z.string().transform(v => v.replace("Bearer ", ""))
+                }),
+                body: absensiSchema.insert,
+                response: {
+                    200: genericResponse(200),
+                    401: genericResponse(401)
+                }
             }
-        }
-    }, async (req) => {
-        const {id} = req.body;
-        await db.update(absensi).set({
-            status_absen: "Validasi",
-        }).where(eq(absensi.id, Number(id))).execute();
+        }, async (req) => {
+            const { id } = req.body;
+            await db.update(absensi).set({
+                status_absen: "Validasi"
+            }).where(eq(absensi.id, Number(id))).execute();
 
-        return {
-            statusCode: 200,
-            message: "Success"
-        };
-    }
-).get("/materi/:id/:id_pelaksanaan_pelatihan", {
-    preHandler: [instance.authenticate],
-    schema: {
-        description: "get absensi",
-        tags: ["getDetail"],
-        headers: z.object({
-            authorization: z.string().transform(v => v.replace("Bearer ", ""))
-        }),
-        params: z.object({
-            id: z.string(),
-            id_pelaksanaan_pelatihan: z.string(),
-        }),
-        response: {
-            200: genericResponse(200).merge(z.object({
-                status_absen: z.string(),
-            })),
-            401: genericResponse(401)
+            return {
+                statusCode: 200,
+                message: "Success"
+            };
         }
-    }
-    }, async (req) => { 
-    const {id, id_pelaksanaan_pelatihan} = req.params;
-    const user = req.user as User;
-    const idUser = user.id ? user.id.   toString() : null;
-    const res = await db.select().from(absensi).where(
-        and(
-        eq(absensi.id_peserta, Number(idUser)), 
-        eq(absensi.id_materi, Number(id)), 
-        eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))
-    )).execute();
-    if (!res || res.length === 0) {
-        return {
-            statusCode: 401,
-            message: "absensi not found"
-        };
-    }
-    return {
-        statusCode: 200,
-        message: "Success",
-        status_absen: res[0].status_absen,
-    };
-}).get("/exam/:id/:id_pelaksanaan_pelatihan", {
-    preHandler: [instance.authenticate],
-    schema: {
-        description: "get absensi",
-        tags: ["getDetail"],
-        headers: z.object({
-            authorization: z.string().transform(v => v.replace("Bearer ", ""))
-        }),
-        params: z.object({
-            id: z.string(),
-            id_pelaksanaan_pelatihan: z.string(),
-        }),
-        response: {
-            200: genericResponse(200).merge(z.object({
-                status_absen: z.string(),
-            })),
-            401: genericResponse(401)
-        }
-    }
-    }, async (req) => { 
-    const {id, id_pelaksanaan_pelatihan} = req.params;
-    const user = req.user as User;
-    const idUser = user.id ? user.id.toString() : null;
-    const res = await db.select().from(absensi).where(
-        and(
-            eq(absensi.id_peserta, Number(idUser)),
-            eq(absensi.id_exam, Number(id)),
-            eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))
-        )
-    ).execute();
-    if (!res || res.length === 0) {
-        return {
-            statusCode: 401,
-            message: "absensi not found"
-        };
-    }
-    return {
-        statusCode: 200,
-        message: "Success",
-        status_absen: res[0].status_absen,
-    };
-})
+        ).get("/materi/:id/:id_pelaksanaan_pelatihan", {
+            preHandler: [instance.authenticate],
+            schema: {
+                description: "get absensi",
+                tags: ["getDetail"],
+                headers: z.object({
+                    authorization: z.string().transform(v => v.replace("Bearer ", ""))
+                }),
+                params: z.object({
+                    id: z.string(),
+                    id_pelaksanaan_pelatihan: z.string()
+                }),
+                response: {
+                    200: genericResponse(200).merge(z.object({
+                        status_absen: z.string()
+                    })),
+                    401: genericResponse(401)
+                }
+            }
+        }, async (req) => {
+            const { id, id_pelaksanaan_pelatihan } = req.params;
+            const user = req.user as User;
+            const idUser = user.id ? user.id.toString() : null;
+            const res = await db.select().from(absensi).where(
+                and(
+                    eq(absensi.id_peserta, Number(idUser)),
+                    eq(absensi.id_materi, Number(id)),
+                    eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))
+                )).execute();
+            if (!res || res.length === 0) {
+                return {
+                    statusCode: 401,
+                    message: "absensi not found"
+                };
+            }
+            return {
+                statusCode: 200,
+                message: "Success",
+                status_absen: res[0].status_absen
+            };
+        }).get("/exam/:id/:id_pelaksanaan_pelatihan", {
+            preHandler: [instance.authenticate],
+            schema: {
+                description: "get absensi",
+                tags: ["getDetail"],
+                headers: z.object({
+                    authorization: z.string().transform(v => v.replace("Bearer ", ""))
+                }),
+                params: z.object({
+                    id: z.string(),
+                    id_pelaksanaan_pelatihan: z.string()
+                }),
+                response: {
+                    200: genericResponse(200).merge(z.object({
+                        status_absen: z.string()
+                    })),
+                    401: genericResponse(401)
+                }
+            }
+        }, async (req) => {
+            const { id, id_pelaksanaan_pelatihan } = req.params;
+            const user = req.user as User;
+            const idUser = user.id ? user.id.toString() : null;
+            const res = await db.select().from(absensi).where(
+                and(
+                    eq(absensi.id_peserta, Number(idUser)),
+                    eq(absensi.id_exam, Number(id)),
+                    eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))
+                )
+            ).execute();
+
+            if (!res || res.length === 0) {
+                return {
+                    statusCode: 401,
+                    message: "absensi not found"
+                };
+            }
+            return {
+                statusCode: 200,
+                message: "Success",
+                status_absen: res[0].status_absen
+            };
+        });
 };

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { integer, pgTable, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, pgEnum, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { pelaksanaanPelatihan } from "./rancangan_pelatihan.ts";
 

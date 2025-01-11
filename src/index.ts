@@ -15,6 +15,7 @@ import { db } from "./modules/database.ts";
 import { eq } from "drizzle-orm";
 import fastifyStatic from "@fastify/static";
 import fastifyMultipart from "@fastify/multipart";
+import argon2, { argon2id } from "argon2";
 
 const server = fastify({
     logger: {
@@ -74,6 +75,37 @@ server.register(import("@scalar/fastify-api-reference"), {
     }
 });
 
+async function createAdminUser() {
+    const adminEmail = "admin@example.com";
+    const adminPassword = "admin123"; // Change this to a secure password
+    const adminName = "admin";
+
+    const userResult = await db.select().from(users).where(eq(users.email, adminEmail)).execute();
+    if (userResult.length === 0) {
+        const hashPass = await argon2.hash(adminPassword, {
+            type: argon2id
+        });
+        await db.insert(users).values({
+            id_eksternal: null,
+            id_karyawan: null,
+            email: adminEmail,
+            password: hashPass,
+            nama: adminName,
+            user_role: "admin",
+            user_type: "internal",
+            createdAt: new Date()
+        }).execute();
+        console.log("Admin user created");
+    }
+    else {
+        console.log("Admin user already exists");
+    }
+}
+
+createAdminUser().catch((err) => {
+    console.error("Error creating admin user:", err);
+});
+
 // JWT
 server.decorate("authenticate", async (req: any, res: any) => {
     const token = req.headers["authorization"];
@@ -84,7 +116,10 @@ server.decorate("authenticate", async (req: any, res: any) => {
         const { id } = server.jwt.verify<{ id: number }>(token);
         const userResult = await db.select().from(users).where(eq(users.id, Number(id))).execute();
         if (!userResult || userResult.length === 0) {
-            return res.code(401).send({ message: "User not found" });
+            return res.code(400).send({
+                message: "Unauthorized"
+            }
+            );
         }
         const user = userResult[0];
         req.user = user;
@@ -138,23 +173,23 @@ server.addHook("preSerialization", async (req, rep, payload: Record<string, unkn
     return { ...newPayload, ...payload };
 });
 
-server.register(fastifyStatic, { 
-    root: resolve(import.meta.dirname, 'public/'), 
-    prefix: '/public/',  
-    constraints: {host: 'localhost:3000'}
+server.register(fastifyStatic, {
+    root: resolve(import.meta.dirname, "public/"),
+    prefix: "/public/"
+    // constraints: {host: 'localhost:3000'},
 });
 
 server.register(fastifyMultipart, {
     limits: {
-      fieldNameSize: 100, // Max field name size in bytes
-      fieldSize: 100,     // Max field value size in bytes
-      fields: 10,         // Max number of non-file fields
-      fileSize: 1000000,  // For multipart forms, the max file size in bytes
-      files: 1,           // Max number of file fields
-      headerPairs: 2000,  // Max number of header key=>value pairs
-      parts: 1000         // For multipart forms, the max number of parts (fields + files)
+        fieldNameSize: 100, // Max field name size in bytes
+        fieldSize: 100, // Max field value size in bytes
+        fields: 10, // Max number of non-file fields
+        fileSize: 1000000, // For multipart forms, the max file size in bytes
+        files: 1, // Max number of file fields
+        headerPairs: 2000, // Max number of header key=>value pairs
+        parts: 1000 // For multipart forms, the max number of parts (fields + files)
     }
-  });
+});
 
 server.listen({ port: port, host: host })
     .catch((error) => {

@@ -1,10 +1,10 @@
 import { sql } from "drizzle-orm";
-import { integer, pgTable, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { integer, pgTable, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { users } from "./users.ts";
 import { jawabanBenar } from "./jawaban_benar.ts";
 import { opsiJawaban } from "./opsi_jawaban.ts";
-import { questionTable} from "./question.ts";
+import { questionTable } from "./question.ts";
 import { pelaksanaanPelatihan } from "./rancangan_pelatihan.ts";
 
 export const jawabanIsBenarEnum = pgEnum("jawaban_is_benar_enum", ["benar", "salah"]);

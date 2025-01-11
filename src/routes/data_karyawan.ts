@@ -24,7 +24,7 @@ export const route = (instance: typeof server) => {
                     401: genericResponse(401)
                 }
             }
-        }, async (req) => {
+        }, async () => {
             const res = await db.select().from(karyawan).execute();
             return {
                 statusCode: 200,
@@ -46,7 +46,7 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { nama, alamat, no_telp, jenis_kelamin, email, tempat_lahir, tanggal_lahir, posisi, status, unit_org, nik } = req.body;
+            const { nama, alamat, no_telp, jenis_kelamin, email, tempat_lahir, tanggal_lahir, posisi, status, unit_org, nik, job_code, tmt } = req.body;
 
             const trainee = await db.select().from(karyawan).where(eq(karyawan.nama, nama)).execute();
 
@@ -69,6 +69,8 @@ export const route = (instance: typeof server) => {
                 no_telp,
                 unit_org,
                 jenis_kelamin,
+                job_code,
+                tmt,
                 createdAt: new Date()
             }).execute();
 

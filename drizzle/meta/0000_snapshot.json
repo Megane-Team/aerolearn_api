@@ -1,5 +1,5 @@
 {
-  "id": "aff41fbe-ed8d-4e60-9294-62cd10c6018c",
+  "id": "f381e1f8-a1c8-473a-af82-557165bea401",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -751,7 +751,7 @@
         },
         "tanggal_lahir": {
           "name": "tanggal_lahir",
-          "type": "text",
+          "type": "date",
           "primaryKey": false,
           "notNull": true
         },
@@ -768,14 +768,20 @@
           "primaryKey": false,
           "notNull": true
         },
-        "unit_org": {
-          "name": "unit_org",
+        "alamat": {
+          "name": "alamat",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "alamat": {
-          "name": "alamat",
+        "tmt": {
+          "name": "tmt",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unit_org": {
+          "name": "unit_org",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -803,6 +809,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "job_code": {
+          "name": "job_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
@@ -1079,6 +1091,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "tanggal": {
+          "name": "tanggal",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_pelaksanaan_pelatihan": {
+          "name": "id_pelaksanaan_pelatihan",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1095,6 +1119,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "id_peserta"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "notifications_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk": {
+          "name": "notifications_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk",
+          "tableFrom": "notifications",
+          "tableTo": "pelaksanaan_pelatihan",
+          "columnsFrom": [
+            "id_pelaksanaan_pelatihan"
           ],
           "columnsTo": [
             "id"

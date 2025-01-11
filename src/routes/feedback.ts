@@ -6,44 +6,53 @@ import { z } from "zod";
 import { feedbackQuestion, feedbackQuestionSchema } from "@/models/feedbackquestion.ts";
 import { feedback, feedbackSchema } from "@/models/feedback.ts";
 import { nilai } from "@/models/nilai.ts";
-import { Jimp, loadFont, measureText, measureTextHeight } from "jimp";
-import { SANS_64_BLACK } from "jimp/fonts";
-import { join } from "path";
+import { sertifikat, sertifikatSchema } from "@/models/sertifikasi.ts";
+import { pelaksanaanPelatihan } from "@/models/rancangan_pelatihan.ts";
+import { pelatihan } from "@/models/pelatihan.ts";
 
 export const prefix = "/feedback";
 interface User {
     id: number;
+    nama: string;
 }
-export const route = (instance : typeof server) => { instance
-    .get("/", {
-        preHandler: [instance.authenticate],
-        schema:{
-            description: "get question by id_training",
-            tags: ["getAll"],
-            headers: z.object({
-                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            }),
-            response: {
-                200: genericResponse(200).merge(z.object({
-                    data: z.array(feedbackQuestionSchema.select)
-                })),
-                401: genericResponse(401),
+export const route = (instance: typeof server) => {
+    instance
+        .get("/", {
+            preHandler: [instance.authenticate],
+            schema: {
+                description: "get question",
+                tags: ["getAll"],
+                headers: z.object({
+                    authorization: z.string().transform(v => v.replace("Bearer ", ""))
+                }),
+                response: {
+                    200: genericResponse(200).merge(z.object({
+                        data: z.array(feedbackQuestionSchema.select)
+                    })),
+                    401: genericResponse(401)
+                }
             }
-        }
-    }, async (req) => {
-        const feedbackQuestionRes = await db.select().from(feedbackQuestion).execute();
-        return{
-            statusCode: 200,
-            message: "Success",
-            data: feedbackQuestionRes,
-        }
-    }).post("/question/+",{
-        preHandler: [instance.authenticate],
+        }, async () => {
+            const feedbackQuestionRes = await db.select().from(feedbackQuestion).execute();
+
+            if (feedbackQuestionRes.length === 0) {
+                return {
+                    statusCode: 401,
+                    message: "question not found"
+                };
+            }
+            return {
+                statusCode: 200,
+                message: "Success",
+                data: feedbackQuestionRes
+            };
+        }).post("/question/+", {
+            preHandler: [instance.authenticate],
             schema: {
                 description: "adding feedback question",
                 tags: ["adding"],
                 headers: z.object({
-                    authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+                    authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 body: feedbackQuestionSchema.insert,
                 response: {
@@ -52,38 +61,38 @@ export const route = (instance : typeof server) => { instance
                 }
             }
         }, async (req) => {
-            const {text} = req.body;
+            const { text } = req.body;
             const questionGet = await db.select().from(feedbackQuestion).where(eq(feedbackQuestion.text, text)).execute();
-            
-            if(questionGet.length > 0){
-                return{
+
+            if (questionGet.length > 0) {
+                return {
                     statusCode: 401,
-                    message: "question is already exist",
-                }
+                    message: "question is already exist"
+                };
             }
-    
+
             await db.insert(feedbackQuestion).values({
                 text,
-                createdAt: new Date(),
+                createdAt: new Date()
             }).execute();
-            
-            return{
+
+            return {
                 statusCode: 200,
-                message: "Success",
-            }
+                message: "Success"
+            };
         }
-    ).post("/+",{
-        preHandler: [instance.authenticate],
+        ).post("/+", {
+            preHandler: [instance.authenticate],
             schema: {
                 description: "adding feedback answer",
                 tags: ["adding"],
                 headers: z.object({
-                    authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+                    authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 body: z.object({
                     text: z.string(),
                     id_feedbackQuestion: z.number(),
-                    id_pelaksanaanPelatihan: z.number(),
+                    id_pelaksanaanPelatihan: z.number()
                 }),
                 response: {
                     200: genericResponse(200),
@@ -92,56 +101,64 @@ export const route = (instance : typeof server) => { instance
             }
         }, async (req) => {
             const user = req.user as User;
-            const id = user.id ? user.id.toString() : null;
-            const {text, id_feedbackQuestion, id_pelaksanaanPelatihan} = req.body;
+            const id = user.id ? user.id : null;
+            const nama = user.nama ? user.nama : null;
+            const { text, id_feedbackQuestion, id_pelaksanaanPelatihan } = req.body;
+            const getPelatihan = await db.select({
+                nama: pelatihan.nama,
+            }).from(pelaksanaanPelatihan).leftJoin(pelatihan, eq(pelaksanaanPelatihan.id_pelatihan, pelatihan.id)).where(eq(pelaksanaanPelatihan.id, id_pelaksanaanPelatihan)).execute();
             const questionGet = await db.select().from(feedback).where(and(eq(feedback.id_feedbackQuestion, id_feedbackQuestion), eq(feedback.id_pelaksanaanPelatihan, id_pelaksanaanPelatihan))).execute();
-            const nama = user.id ? user.id.toString() : null;
             const nilaiRes = await db.select().from(nilai).where(and(eq(nilai.id_peserta, Number(id)), eq(nilai.id_pelaksanaan_pelatihan, id_pelaksanaanPelatihan))).execute();
-            if (nilaiRes[0].score >= 70) {
-                const templatePath = join(import.meta.dirname, `../public/template/template.png`);
-                const outputPath = join(import.meta.dirname, `../public/e-sertifikat/output_${id}.png`) as `${string}.${string}`;
-            
-                const template = await Jimp.read(templatePath);
-                const font = await loadFont(SANS_64_BLACK);
-                const textWidth = measureText(font, text);
-                const textHeight = measureTextHeight(font, text, template.bitmap.width);
-                const textX = (template.bitmap.width - textWidth) / 2;
-                const textY = (template.bitmap.height - textHeight) / 2;
-                template.print({font, x: textX, y: textY, text: "Hello, world!"});
-                await template.write(outputPath);
-            
-                console.log('Image generated:', outputPath);
-            }
-            if(questionGet.length > 0){
-                return{
-                    statusCode: 401,
-                    message: "answer is already exist",
+
+            if (nilaiRes.length > 0 && nilaiRes[0].score >= 70) {
+                const getSertifikat = await db.select().from(sertifikat).where(and(eq(sertifikat.id_peserta, Number(id)), eq(sertifikat.id_pelaksanaan_pelatihan, id_pelaksanaanPelatihan))).execute();
+                if (getSertifikat.length > 0) {
+                    return {
+                        statusCode: 401,
+                        message: "Sertifikat is already exist"
+                    };
                 }
+
+                const record = {
+                    id_peserta: Number(id),
+                    id_pelaksanaan_pelatihan: id_pelaksanaanPelatihan,
+                    sertifikasi: `Sertifikat ${nama}:${getPelatihan[0].nama}`,
+                    tanggal: new Date().toISOString().split('T')[0],
+                    masa_berlaku: new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().split('T')[0],
+                }
+                await db.insert(sertifikat).values(record).execute();
+            }
+            
+            if (questionGet.length > 0) {
+                return {
+                    statusCode: 401,
+                    message: "answer is already exist"
+                };
             }
             await db.insert(feedback).values({
                 text,
                 id_feedbackQuestion,
                 id_pelaksanaanPelatihan,
                 id_user: Number(id),
-                createdAt: new Date(),
+                createdAt: new Date()
             }).execute();
-            
-            return{
+
+            return {
                 statusCode: 200,
-                message: "Success",
-            }
+                message: "Success"
+            };
         }
-    ).get("/:id/:id_pelaksanaanPelatihan",{ // id_peserta
-        preHandler: [instance.authenticate],
+        ).get("/:id/:id_pelaksanaanPelatihan", { // id_peserta
+            preHandler: [instance.authenticate],
             schema: {
                 description: "get feedback answer by trainee",
                 tags: ["getAll"],
                 headers: z.object({
-                    authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+                    authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
                     id: z.string(),
-                    id_pelaksanaanPelatihan: z.string(),
+                    id_pelaksanaanPelatihan: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -151,20 +168,21 @@ export const route = (instance : typeof server) => { instance
                 }
             }
         }, async (req) => {
-            const {id, id_pelaksanaanPelatihan} = req.params;
+            const { id, id_pelaksanaanPelatihan } = req.params;
             const res = await db.select().from(feedback).where(and(eq(feedback.id_user, Number(id)), eq(feedback.id_pelaksanaanPelatihan, Number(id_pelaksanaanPelatihan)))).execute();
-            if(!res || res == null ){
-                return{
-                    statusCode:401,
-                    message: "data not found",
-                }
+
+            if (!res || res == null) {
+                return {
+                    statusCode: 401,
+                    message: "data not found"
+                };
             }
-            
-            return{
+
+            return {
                 statusCode: 200,
                 message: "Success",
-                data: res,
-            }
+                data: res
+            };
         }
-    )
-}
+        );
+};
