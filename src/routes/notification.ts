@@ -9,16 +9,16 @@ export const prefix = "/notification";
 
 export const route = (instance: typeof server) => {
     instance
-        .get("/:id", {
+        .get("/:id_user", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get notifications",
-                tags: ["getAll"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string()
+                    id_user: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -28,8 +28,8 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id } = req.params;
-            const res = await db.select().from(notifications).where(eq(notifications.id_peserta, Number(id))).execute();
+            const { id_user } = req.params;
+            const res = await db.select().from(notifications).where(eq(notifications.id_user, Number(id_user))).execute();
 
             if (!res || res.length === 0) {
                 return {
@@ -57,9 +57,9 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id_peserta, title, detail, id_pelaksanaan_pelatihan, tanggal } = req.body;
+            const { id_user, title, detail, id_pelaksanaan_pelatihan, tanggal } = req.body;
 
-            const notificationsGet = await db.select().from(notifications).where(and(eq(notifications.id_peserta, id_peserta), eq(notifications.title, title), eq(notifications.detail, detail))).execute();
+            const notificationsGet = await db.select().from(notifications).where(and(eq(notifications.id_user, id_user), eq(notifications.title, title), eq(notifications.detail, detail))).execute();
 
             if (notificationsGet.length > 0) {
                 return {
@@ -68,7 +68,7 @@ export const route = (instance: typeof server) => {
                 };
             }
             await db.insert(notifications).values({
-                id_peserta,
+                id_user,
                 title,
                 detail,
                 tanggal,

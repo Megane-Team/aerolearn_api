@@ -14,7 +14,7 @@ export const route = (instance: typeof server) => {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get tools",
-                tags: ["getAll"],
+                tags: ["get all"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
@@ -100,16 +100,16 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-        ).get("/:id", { // id pelatihan
+        ).get("/:id_pelaksanaan_pelatihan", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get tool",
-                tags: ["detail"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string()
+                    id_pelaksanaan_pelatihan: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -119,14 +119,14 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const {id} = req.params;
+            const {id_pelaksanaan_pelatihan} = req.params;
             const res = await db.select(
                 {
                     id: alat.id,
                     nama: alat.nama,
                     createdAt: alat.createdAt,
                 }
-            ).from(tableAlat).leftJoin(alat, eq(tableAlat.id_alat, alat.id)).where(eq(tableAlat.id_pelaksanaan_pelatihan, Number(id))).execute();
+            ).from(tableAlat).leftJoin(alat, eq(tableAlat.id_alat, alat.id)).where(eq(tableAlat.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))).execute();
             if (res.length == 0) {
                 return {
                     statusCode: 401,

@@ -86,7 +86,7 @@ export const route = (instance: typeof server) => {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get training detail",
-                tags: ["detail"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
@@ -101,7 +101,7 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const id = req.params.id;
+            const {id} = req.params;
             const trainingDetail = await db.select().from(pelatihan).where(eq(pelatihan.id, Number(id))).execute();
             return {
                 statusCode: 200,

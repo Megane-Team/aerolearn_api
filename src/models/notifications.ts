@@ -5,7 +5,7 @@ import { users } from "./users.ts"; import { pelaksanaanPelatihan } from "./ranc
 
 export const notifications = pgTable("notifications", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
-    id_peserta: integer().notNull().references(() => users.id),
+    id_user: integer().notNull().references(() => users.id),
     title: text().notNull(),
     detail: text().notNull(),
     tanggal: date().notNull(),

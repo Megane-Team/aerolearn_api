@@ -19,7 +19,7 @@ export const route = (instance: typeof server) => {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get score",
-                tags: ["getAll"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
@@ -90,19 +90,17 @@ export const route = (instance: typeof server) => {
 
             const [questions, correctAnswers] = await Promise.all([
                 db.select().from(questionTable).where(eq(questionTable.id_exam, getPelaksanaan[0].id_exam)).execute(),
-                db.select().from(jawaban) .innerJoin(questionTable, eq(jawaban.id_question, questionTable.id)).where(and(eq(jawaban.is_benar, 'benar'), eq(questionTable.id_exam, getPelaksanaan[0].id_exam))).execute()
+                db.select().from(jawaban).innerJoin(questionTable, and(eq(jawaban.id_question, questionTable.id))).where(and(eq(jawaban.is_benar, 'benar'), eq(questionTable.id_exam, getPelaksanaan[0].id_exam), eq(jawaban.id_peserta, id_peserta), eq(jawaban.id_pelaksanaan_pelatihan, id_pelaksanaan_pelatihan))).execute()
             ]);
 
+            
             const totalQuestion = questions.length;
-            console.log(totalQuestion);
-            console.log(correctAnswers.length)
             
             const score = (correctAnswers.length / totalQuestion) * 100;
-            console.log(score);
             await db.insert(nilai).values({
                 id_peserta,
                 id_pelaksanaan_pelatihan : getPelaksanaan[0].id_pelaksanaan,
-                score,
+                score : score.toString(),
                 createdAt: new Date()
             }).execute();
 

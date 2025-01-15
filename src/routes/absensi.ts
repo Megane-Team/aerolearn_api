@@ -11,16 +11,16 @@ interface User {
 }
 export const route = (instance: typeof server) => {
     instance
-        .get("/:id", { // id pelaksanaan pelatihan
+        .get("/:id_pelaksanaan_pelatihan", { // id pelaksanaan pelatihan
             preHandler: [instance.authenticate],
             schema: {
                 description: "get all absensi trainee",
-                tags: ["getAll"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string()
+                    id_pelaksanaan_pelatihan: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -30,8 +30,8 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id } = req.params;
-            const res = await db.select().from(absensi).where(eq(absensi.id_pelaksanaan_pelatihan, Number(id))).execute();
+            const { id_pelaksanaan_pelatihan } = req.params;
+            const res = await db.select().from(absensi).where(eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))).execute();
             return {
                 statusCode: 200,
                 message: "Success",
@@ -116,16 +116,16 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-        ).get("/materi/:id/:id_pelaksanaan_pelatihan", {
+        ).get("/materi/:id_materi/:id_pelaksanaan_pelatihan", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get absensi",
-                tags: ["getDetail"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string(),
+                    id_materi: z.string(),
                     id_pelaksanaan_pelatihan: z.string()
                 }),
                 response: {
@@ -136,13 +136,13 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id, id_pelaksanaan_pelatihan } = req.params;
+            const { id_materi, id_pelaksanaan_pelatihan } = req.params;
             const user = req.user as User;
             const idUser = user.id ? user.id.toString() : null;
             const res = await db.select().from(absensi).where(
                 and(
                     eq(absensi.id_peserta, Number(idUser)),
-                    eq(absensi.id_materi, Number(id)),
+                    eq(absensi.id_materi, Number(id_materi)),
                     eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))
                 )).execute();
             if (!res || res.length === 0) {
@@ -156,16 +156,16 @@ export const route = (instance: typeof server) => {
                 message: "Success",
                 status_absen: res[0].status_absen
             };
-        }).get("/exam/:id/:id_pelaksanaan_pelatihan", {
+        }).get("/exam/:id_exam/:id_pelaksanaan_pelatihan", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get absensi",
-                tags: ["getDetail"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string(),
+                    id_exam: z.string(),
                     id_pelaksanaan_pelatihan: z.string()
                 }),
                 response: {
@@ -176,13 +176,13 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id, id_pelaksanaan_pelatihan } = req.params;
+            const { id_exam, id_pelaksanaan_pelatihan } = req.params;
             const user = req.user as User;
             const idUser = user.id ? user.id.toString() : null;
             const res = await db.select().from(absensi).where(
                 and(
                     eq(absensi.id_peserta, Number(idUser)),
-                    eq(absensi.id_exam, Number(id)),
+                    eq(absensi.id_exam, Number(id_exam)),
                     eq(absensi.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))
                 )
             ).execute();

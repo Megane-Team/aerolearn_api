@@ -86,7 +86,6 @@ export const route = (instance: typeof server) => {
                 .leftJoin(pelatihan, eq(pelaksanaanPelatihan.id_pelatihan, pelatihan.id))
                 .where(eq(sertifikat.id, Number(id))).execute();
 
-                console.log(getSertifikat)
                 if(getSertifikat.length == 0){
                     return {
                         statusCode: 404,
@@ -98,7 +97,7 @@ export const route = (instance: typeof server) => {
                             
                 const template = await Jimp.read(templatePath);
 
-                const qrCodeData = `http://192.168.1.114:3000/file/e-sertifikat/${id}`;
+                const qrCodeData = `http://192.168.164.245:3000/file/e-sertifikat/${id}`;
                 const imageQr = await QRCode.toDataURL(qrCodeData, { width: 200 });
                 const qrCodeImage = await Jimp.read(Buffer.from(imageQr.split(',')[1], 'base64'));
 
@@ -160,7 +159,6 @@ export const route = (instance: typeof server) => {
               }
           
               const pdfStream = Buffer.from(pdfBytes);
-              console.log(pdfStream); // This should log a Buffer
 
               reply
                 .code(200)

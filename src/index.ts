@@ -175,7 +175,7 @@ server.addHook("preSerialization", async (req, rep, payload: Record<string, unkn
 
 server.register(fastifyStatic, {
     root: resolve(import.meta.dirname, "public/"),
-    prefix: "/public/"
+    prefix: "/public/",
     // constraints: {host: 'localhost:3000'},
 });
 

@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS "eksternal" (
 	"alamat" text NOT NULL,
 	"no_telp" text NOT NULL,
 	"tempat_lahir" text NOT NULL,
-	"tanggal_lahir" text NOT NULL,
+	"tanggal_lahir" date NOT NULL,
 	"jenis_kelamin" "jenis_kelamin" NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -97,7 +97,8 @@ CREATE TABLE IF NOT EXISTS "karyawan" (
 	"email" text,
 	"no_telp" text,
 	"job_code" text NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "karyawan_nik_unique" UNIQUE("nik")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "tableAlat" (
@@ -118,13 +119,13 @@ CREATE TABLE IF NOT EXISTS "nilai" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "nilai_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"id_peserta" integer NOT NULL,
 	"id_pelaksanaan_pelatihan" integer NOT NULL,
-	"score" integer NOT NULL,
+	"score" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "notifications" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "notifications_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"id_peserta" integer NOT NULL,
+	"id_user" integer NOT NULL,
 	"title" text NOT NULL,
 	"detail" text NOT NULL,
 	"tanggal" date NOT NULL,
@@ -180,8 +181,9 @@ CREATE TABLE IF NOT EXISTS "ruangan" (
 CREATE TABLE IF NOT EXISTS "sertifikat" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "sertifikat_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"id_peserta" integer NOT NULL,
-	"id_pelatihan" integer NOT NULL,
+	"id_pelaksanaan_pelatihan" integer NOT NULL,
 	"sertifikasi" text NOT NULL,
+	"tanggal" date NOT NULL,
 	"masa_berlaku" date NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -327,7 +329,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "notifications" ADD CONSTRAINT "notifications_id_peserta_users_id_fk" FOREIGN KEY ("id_peserta") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "notifications" ADD CONSTRAINT "notifications_id_user_users_id_fk" FOREIGN KEY ("id_user") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -375,7 +377,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "sertifikat" ADD CONSTRAINT "sertifikat_id_pelatihan_pelatihan_id_fk" FOREIGN KEY ("id_pelatihan") REFERENCES "public"."pelatihan"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "sertifikat" ADD CONSTRAINT "sertifikat_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk" FOREIGN KEY ("id_pelaksanaan_pelatihan") REFERENCES "public"."pelaksanaan_pelatihan"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

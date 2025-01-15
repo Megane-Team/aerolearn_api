@@ -8,16 +8,16 @@ import { z } from "zod";
 export const prefix = "/materi";
 export const route = (instance: typeof server) => {
     instance
-        .get("/:id", { // id pelatihan
+        .get("/:id_pelatihan", { // id pelatihan
             preHandler: [instance.authenticate],
             schema: {
                 description: "get materi",
-                tags: ["getAll"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string()
+                    id_pelatihan: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -27,8 +27,8 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id } = req.params;
-            const res = await db.select().from(materi).where(eq(materi.id_pelatihan, Number(id))).execute();
+            const { id_pelatihan } = req.params;
+            const res = await db.select().from(materi).where(eq(materi.id_pelatihan, Number(id_pelatihan))).execute();
             if (!res || res.length === 0) {
                 return {
                     statusCode: 401,
