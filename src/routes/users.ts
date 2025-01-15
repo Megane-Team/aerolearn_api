@@ -35,7 +35,7 @@ export const route = (instance: typeof server) => {
                 body: z.object({
                     email: z.string(),
                     password: z.string()
-                }),
+                }), 
                 response: {
                     200: genericResponse(200).merge(z.object({
                         token: z.string(),

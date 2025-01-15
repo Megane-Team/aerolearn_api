@@ -46,16 +46,16 @@ export const route = (instance: typeof server) => {
                 message: "Success",
                 data: examRes
             };
-        }).get("/question/:id", { // id exam
+        }).get("/question/:id_exam", { // id exam
             preHandler: [instance.authenticate],
             schema: {
                 description: "get question",
-                tags: ["getAll"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string()
+                    id_exam: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -65,8 +65,8 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id } = req.params;
-            const examRes = await db.select().from(questionTable).where(eq(questionTable.id_exam, Number(id))).execute();
+            const { id_exam } = req.params;
+            const examRes = await db.select().from(questionTable).where(eq(questionTable.id_exam, Number(id_exam))).execute();
             if (!examRes || examRes.length === 0) {
                 return {
                     statusCode: 401,
@@ -78,16 +78,16 @@ export const route = (instance: typeof server) => {
                 message: "Success",
                 data: examRes
             };
-        }).get("/question/option/:id", { // id question
+        }).get("/question/option/:id_question", { // id question
             preHandler: [instance.authenticate],
             schema: {
                 description: "get answer options",
-                tags: ["getAll"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string()
+                    id_question: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -97,8 +97,8 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id } = req.params;
-            const res = await db.select().from(opsiJawaban).where(eq(opsiJawaban.id_question, Number(id))).execute();
+            const { id_question } = req.params;
+            const res = await db.select().from(opsiJawaban).where(eq(opsiJawaban.id_question, Number(id_question))).execute();
             if (!res) {
                 return {
                     statusCode: 401,
@@ -225,7 +225,7 @@ export const route = (instance: typeof server) => {
             preHandler: [instance.authenticate],
             schema: {
                 description: "adding or updating answer by trainee",
-                tags: ["adding", "updating"],
+                tags: ["adding", "update"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
@@ -234,7 +234,7 @@ export const route = (instance: typeof server) => {
                 }),
                 body: z.object({
                     id_opsi_jawaban: z.number(),
-                    id_peserta: z.number(),
+                        id_peserta: z.number(),
                     id_question: z.number(),
                     id_pelaksanaan_pelatihan: z.number()
                 }),
@@ -252,7 +252,6 @@ export const route = (instance: typeof server) => {
             const isBenar = option[0].jawaban === res[0].text ? "benar" : "salah";
 
             if (id) {
-            // Update existing answer
                 await db.update(jawaban).set({
                     id_opsi_jawaban,
                     id_peserta,
@@ -263,7 +262,6 @@ export const route = (instance: typeof server) => {
                 }).where(eq(jawaban.id, Number(id))).execute();
             }
             else {
-            // Insert new answer
                 await db.insert(jawaban).values({
                     id_opsi_jawaban,
                     id_peserta,
@@ -283,7 +281,7 @@ export const route = (instance: typeof server) => {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get answer by trainee",
-                tags: ["getAll"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),

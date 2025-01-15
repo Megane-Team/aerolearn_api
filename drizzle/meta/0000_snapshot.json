@@ -1,5 +1,5 @@
 {
-  "id": "f381e1f8-a1c8-473a-af82-557165bea401",
+  "id": "70e21903-7d2f-42bc-8e3d-8d61b2d7daa4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -221,7 +221,7 @@
         },
         "tanggal_lahir": {
           "name": "tanggal_lahir",
-          "type": "text",
+          "type": "date",
           "primaryKey": false,
           "notNull": true
         },
@@ -827,7 +827,15 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "karyawan_nik_unique": {
+          "name": "karyawan_nik_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nik"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1005,7 +1013,7 @@
         },
         "score": {
           "name": "score",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -1073,8 +1081,8 @@
             "cycle": false
           }
         },
-        "id_peserta": {
-          "name": "id_peserta",
+        "id_user": {
+          "name": "id_user",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -1113,12 +1121,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "notifications_id_peserta_users_id_fk": {
-          "name": "notifications_id_peserta_users_id_fk",
+        "notifications_id_user_users_id_fk": {
+          "name": "notifications_id_user_users_id_fk",
           "tableFrom": "notifications",
           "tableTo": "users",
           "columnsFrom": [
-            "id_peserta"
+            "id_user"
           ],
           "columnsTo": [
             "id"
@@ -1550,8 +1558,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "id_pelatihan": {
-          "name": "id_pelatihan",
+        "id_pelaksanaan_pelatihan": {
+          "name": "id_pelaksanaan_pelatihan",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -1559,6 +1567,12 @@
         "sertifikasi": {
           "name": "sertifikasi",
           "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tanggal": {
+          "name": "tanggal",
+          "type": "date",
           "primaryKey": false,
           "notNull": true
         },
@@ -1591,12 +1605,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "sertifikat_id_pelatihan_pelatihan_id_fk": {
-          "name": "sertifikat_id_pelatihan_pelatihan_id_fk",
+        "sertifikat_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk": {
+          "name": "sertifikat_id_pelaksanaan_pelatihan_pelaksanaan_pelatihan_id_fk",
           "tableFrom": "sertifikat",
-          "tableTo": "pelatihan",
+          "tableTo": "pelaksanaan_pelatihan",
           "columnsFrom": [
-            "id_pelatihan"
+            "id_pelaksanaan_pelatihan"
           ],
           "columnsTo": [
             "id"

@@ -27,16 +27,16 @@ const progressSchemaId = z.object({
 });
 export const route = (instance: typeof server) => {
     instance
-        .get("/:id", { // id pelaksanaan pelatihan
+        .get("/:id_pelaksanaan_pelatihan", { // id pelaksanaan pelatihan
             preHandler: [instance.authenticate],
             schema: {
                 description: "get all data trainee",
-                tags: ["getAll"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string()
+                    id_pelaksanaan_pelatihan: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -46,8 +46,8 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const { id } = req.params;
-            const res = await db.select().from(tablePeserta).where(eq(tablePeserta.id_pelaksanaan_pelatihan, Number(id))).execute();
+            const { id_pelaksanaan_pelatihan } = req.params;
+            const res = await db.select().from(tablePeserta).where(eq(tablePeserta.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan))).execute();
             if (!res) {
                 return {
                     statusCode: 401,
@@ -96,16 +96,16 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-        ).get("/progress/:id", {
+        ).get("/progress/:id_peserta", {
             preHandler: [instance.authenticate],
             schema: {
-                description: "get all data trainee",
-                tags: ["getAll"],
+                description: "get progress",
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string()
+                    id_peserta: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
@@ -115,10 +115,10 @@ export const route = (instance: typeof server) => {
                 }
             }
         }, async (req) => {
-            const id = req.params.id;
+            const {id_peserta} = req.params;
             const res = await db.select()
                 .from(tablePeserta)
-                .where(eq(tablePeserta.id_peserta, Number(id)))
+                .where(eq(tablePeserta.id_peserta, Number(id_peserta)))
                 .execute();
 
             if (res.length === 0) {

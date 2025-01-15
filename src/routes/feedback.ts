@@ -110,7 +110,7 @@ export const route = (instance: typeof server) => {
             const questionGet = await db.select().from(feedback).where(and(eq(feedback.id_feedbackQuestion, id_feedbackQuestion), eq(feedback.id_pelaksanaanPelatihan, id_pelaksanaanPelatihan))).execute();
             const nilaiRes = await db.select().from(nilai).where(and(eq(nilai.id_peserta, Number(id)), eq(nilai.id_pelaksanaan_pelatihan, id_pelaksanaanPelatihan))).execute();
 
-            if (nilaiRes.length > 0 && nilaiRes[0].score >= 70) {
+            if (nilaiRes.length > 0 && Number(nilaiRes[0].score) >= 70) {
                 const getSertifikat = await db.select().from(sertifikat).where(and(eq(sertifikat.id_peserta, Number(id)), eq(sertifikat.id_pelaksanaan_pelatihan, id_pelaksanaanPelatihan))).execute();
                 if (getSertifikat.length > 0) {
                     return {
@@ -148,30 +148,31 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-        ).get("/:id/:id_pelaksanaanPelatihan", { // id_peserta
+        ).get("/:id_peserta/:id_feedbackQuestion/:id_pelaksanaanPelatihan", { // id_peserta
             preHandler: [instance.authenticate],
             schema: {
                 description: "get feedback answer by trainee",
-                tags: ["getAll"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
                 params: z.object({
-                    id: z.string(),
+                    id_peserta: z.string(),
+                    id_feedbackQuestion: z.string(),
                     id_pelaksanaanPelatihan: z.string()
                 }),
                 response: {
                     200: genericResponse(200).merge(z.object({
-                        data: z.array(feedbackSchema.select)
+                        data: feedbackSchema.select
                     })),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const { id, id_pelaksanaanPelatihan } = req.params;
-            const res = await db.select().from(feedback).where(and(eq(feedback.id_user, Number(id)), eq(feedback.id_pelaksanaanPelatihan, Number(id_pelaksanaanPelatihan)))).execute();
+            const { id_peserta, id_pelaksanaanPelatihan, id_feedbackQuestion } = req.params;
+            const res = await db.select().from(feedback).where(and(eq(feedback.id_user, Number(id_peserta)), eq(feedback.id_feedbackQuestion, Number(id_feedbackQuestion)), eq(feedback.id_pelaksanaanPelatihan, Number(id_pelaksanaanPelatihan)))).execute();
 
-            if (!res || res == null) {
+            if (res.length == 0) {
                 return {
                     statusCode: 401,
                     message: "data not found"
@@ -181,7 +182,7 @@ export const route = (instance: typeof server) => {
             return {
                 statusCode: 200,
                 message: "Success",
-                data: res
+                data: res[0]
             };
         }
         );

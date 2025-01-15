@@ -83,7 +83,7 @@ export const route = (instance: typeof server) => {
             preHandler: [instance.authenticate],
             schema: {
                 description: "get data eksternal detail",
-                tags: ["detail"],
+                tags: ["get by params"],
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
