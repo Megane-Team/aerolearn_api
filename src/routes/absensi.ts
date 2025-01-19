@@ -1,3 +1,4 @@
+import { webUrl } from "@/config.ts";
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { absensi, absensiSchema } from "@/models/absensi.ts";
@@ -77,6 +78,27 @@ export const route = (instance: typeof server) => {
                 };
             }
 
+            const response = await fetch(`${webUrl}/api/absensi/+`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id_materi,
+                    id_exam,
+                    id_pelaksanaan_pelatihan,
+                    id_peserta: id
+                })
+            })
+
+            if(response.status != 200){
+                return{
+                    statusCode: 400,
+                    message: "error"
+                }
+            }
+
+
             await db.insert(absensi).values({
                 id_pelaksanaan_pelatihan: Number(id_pelaksanaan_pelatihan),
                 id_materi: id_materi,
@@ -91,7 +113,7 @@ export const route = (instance: typeof server) => {
                 message: "Success"
             };
         }
-        ).put("/validasi", {
+        ).put("/validasi/:id", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "absensi trainee",
@@ -99,14 +121,16 @@ export const route = (instance: typeof server) => {
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
-                body: absensiSchema.insert,
+                params: z.object({
+                    id: z.string()
+                }),
                 response: {
                     200: genericResponse(200),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const { id } = req.body;
+            const { id } = req.params;
             await db.update(absensi).set({
                 status_absen: "Validasi"
             }).where(eq(absensi.id, Number(id))).execute();

@@ -166,5 +166,40 @@ export const route = (instance: typeof server) => {
                 message: "Success",
                 data: filteredProgressRes
             };
-        });
+        }).delete("/delete/:id_peserta/:id_pelaksanaan_pelatihan", {
+            preHandler: [instance.authenticate],
+            schema: {
+                description: "delete user",
+                tags: ["delete"],
+                headers: z.object({
+                    authorization: z.string().transform(v => v.replace("Bearer ", ""))
+                }),
+                params: z.object({
+                    id_peserta: z.string(),
+                    id_pelaksanaan_pelatihan: z.string(),
+                }),
+                response: {
+                    200: genericResponse(200),
+                    401: genericResponse(401)
+                }
+            }
+        }, async (req) => {
+            const { id_pelaksanaan_pelatihan, id_peserta } = req.params;
+            const peserta = await db.select().from(tablePeserta).where(and(eq(tablePeserta.id_peserta, Number(id_peserta)), eq(tablePeserta.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan)))).execute();
+
+            if (!peserta) {
+                return {
+                    statusCode: 401,
+                    message: "data not found"
+                };
+            }
+
+            await db.delete(tablePeserta).where(and(eq(tablePeserta.id_peserta, Number(id_peserta)), eq(tablePeserta.id_pelaksanaan_pelatihan, Number(id_pelaksanaan_pelatihan)))).execute();
+
+            return {
+                statusCode: 200,
+                message: "Success"
+            };
+        }
+    );
 };

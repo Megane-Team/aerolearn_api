@@ -39,7 +39,7 @@ export const route = (instance: typeof server) => {
                 message: "Success",
                 data: res
             };
-        }).put("/update", {
+        }).put("/update/:id", {
             preHandler: [instance.authenticate],
             schema: {
                 description: "update draft",
@@ -47,14 +47,20 @@ export const route = (instance: typeof server) => {
                 headers: z.object({
                     authorization: z.string().transform(v => v.replace("Bearer ", ""))
                 }),
-                body: permintaanTrainingSchema.insert,
+                params: z.object({
+                    id: z.string()
+                }),
+                body: z.object({
+                    status: z.enum(["terima", "tolak", "menunggu"])
+                }),
                 response: {
                     200: genericResponse(200),
                     401: genericResponse(401)
                 }
             }
         }, async (req) => {
-            const { id, status } = req.body;
+            const { status } = req.body;
+            const { id } = req.params;
 
             const permintaan = await db.select().from(permintaanTraining).where(eq(permintaanTraining.id, Number(id))).execute();
 

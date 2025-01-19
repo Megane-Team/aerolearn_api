@@ -1,3 +1,4 @@
+import { webUrl } from "@/config.ts";
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { exam } from "@/models/exam.ts";
@@ -8,7 +9,6 @@ import { questionTable } from "@/models/question.ts";
 import { pelaksanaanPelatihan } from "@/models/rancangan_pelatihan.ts";
 import { db } from "@/modules/database.ts";
 import { and, eq } from "drizzle-orm";
-import { get } from "http";
 import { z } from "zod";
 
 export const prefix = "/nilai";
@@ -97,6 +97,25 @@ export const route = (instance: typeof server) => {
             const totalQuestion = questions.length;
             
             const score = (correctAnswers.length / totalQuestion) * 100;
+
+             const response = await fetch(`${webUrl}/api/nilai/+`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id_pelaksanaan_pelatihan,
+                    id_peserta,
+                    score
+                })
+            })
+
+            if(response.status != 200){
+                return{
+                    statusCode: 400,
+                    message: "error"
+                }
+            }
             await db.insert(nilai).values({
                 id_peserta,
                 id_pelaksanaan_pelatihan : getPelaksanaan[0].id_pelaksanaan,
