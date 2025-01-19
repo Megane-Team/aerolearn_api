@@ -231,9 +231,9 @@ export const route = (instance: typeof server) => {
           .where(
             and(
               eq(feedback.id_feedbackQuestion, id_feedbackQuestion),
-              eq(feedback.id_pelaksanaanPelatihan, id_pelaksanaanPelatihan)
+              eq(feedback.id_pelaksanaanPelatihan, id_pelaksanaanPelatihan),
+              eq(feedback.id_user, Number(id))),
             )
-          )
           .execute();
         const nilaiRes = await db
           .select()
