@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 import { integer, pgTable, timestamp, text } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { tableAlat } from "./listAlat.ts";
 
 export const alat = pgTable("alat", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),

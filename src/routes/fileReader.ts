@@ -97,7 +97,7 @@ export const route = (instance: typeof server) => {
                             
                 const template = await Jimp.read(templatePath);
 
-                const qrCodeData = `http://192.168.164.245:3000/file/e-sertifikat/${id}`;
+                const qrCodeData = `http://192.168.1.114:3000/file/e-sertifikat/${id}`;
                 const imageQr = await QRCode.toDataURL(qrCodeData, { width: 200 });
                 const qrCodeImage = await Jimp.read(Buffer.from(imageQr.split(',')[1], 'base64'));
 

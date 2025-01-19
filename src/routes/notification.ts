@@ -1,3 +1,4 @@
+import { webUrl } from "@/config.ts";
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { notifications, notificationSchema } from "@/models/notifications.ts";
@@ -67,6 +68,29 @@ export const route = (instance: typeof server) => {
                     message: "notificationss is already exist"
                 };
             }
+
+
+            const response = await fetch(`${webUrl}/api/notifikasi/+`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id_peserta: id_user,
+                    title,
+                    detail,
+                    tanggal,
+                    id_pelaksanaan_pelatihan,
+                })
+            })
+
+            if(response.status != 200){
+                return{
+                    statusCode: 400,
+                    message: "error"
+                }
+            }
+
             await db.insert(notifications).values({
                 id_user,
                 title,
