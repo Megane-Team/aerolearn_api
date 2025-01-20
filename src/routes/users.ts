@@ -341,16 +341,16 @@ export const route = (instance: typeof server) => {
       async (req) => {
         const { id } = req.params;
         const { nama, user_role, password, email } = req.body;
-        const training = await db
+        const user = await db
           .select()
           .from(users)
-          .where(eq(users.nama, nama))
+          .where(eq(users.id, Number(id)))
           .execute();
 
-        if (training.length == 0) {
+        if (user.length == 0) {
           return {
             statusCode: 401,
-            message: "data training not found",
+            message: "data user not found",
           };
         }
 
