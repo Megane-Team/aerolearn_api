@@ -173,12 +173,10 @@ export const route = (instance: typeof server) => {
       },
       async (req) => {
         const data: any = req.body;
-        console.log(data);
         const question = data.question.value;
         const id_exam = data.id_exam.value;
         const files = data.file;
         let filename;
-        // console.log(files);
         if (files) {
           const buffer = await files.toBuffer();
           filename = data.file.filename;

@@ -123,7 +123,7 @@ export const route = (instance: typeof server) => {
         if (RuanganData.length == 0) {
           return {
             statusCode: 401,
-            message: "data training not found",
+            message: "data ruangan not found",
           };
         }
 

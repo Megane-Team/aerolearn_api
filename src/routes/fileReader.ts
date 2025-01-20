@@ -264,7 +264,6 @@ export const route = (instance: typeof server) => {
             )
             .send(pdfStream as any);
         } catch (error) {
-          console.error("Error generating PDF:", error);
           reply.code(500).send({
             statusCode: 500,
             message: "Error generating or retrieving the certificate",
