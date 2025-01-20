@@ -15,7 +15,6 @@ export const route = (instance: typeof server) => {
     .get(
       "/:id_pelaksanaan_pelatihan",
       {
-        // id pelaksanaan pelatihan
         preHandler: [instance.authenticate],
         schema: {
           description: "get all absensi trainee",

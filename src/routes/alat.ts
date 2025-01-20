@@ -226,7 +226,7 @@ export const route = (instance: typeof server) => {
         if (alatData.length == 0) {
           return {
             statusCode: 401,
-            message: "data training not found",
+            message: "data alat not found",
           };
         }
 
@@ -273,7 +273,7 @@ export const route = (instance: typeof server) => {
           .where(eq(alat.id, Number(id)))
           .execute();
 
-        if (!alatData) {
+        if (!alatData || alatData.length === 0) {
           return {
             statusCode: 401,
             message: "data not found",

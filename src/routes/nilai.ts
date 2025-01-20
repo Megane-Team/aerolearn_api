@@ -18,7 +18,6 @@ export const route = (instance: typeof server) => {
     .get(
       "/:id_peserta/:id_pelaksanaan",
       {
-        // id_pelatihan
         preHandler: [instance.authenticate],
         schema: {
           description: "get score",
