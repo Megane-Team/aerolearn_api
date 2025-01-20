@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS "jawaban_benar" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "karyawan" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "karyawan_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"nik" integer NOT NULL,
+	"nik" text NOT NULL,
 	"nama" text NOT NULL,
 	"tanggal_lahir" date NOT NULL,
 	"tempat_lahir" text NOT NULL,

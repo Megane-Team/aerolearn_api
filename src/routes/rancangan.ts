@@ -265,7 +265,7 @@ export const route = (instance: typeof server) => {
       }
     )
     .put(
-      "/selesai",
+      "/selesai/:id",
       {
         preHandler: [instance.authenticate],
         schema: {
@@ -276,7 +276,7 @@ export const route = (instance: typeof server) => {
               .string()
               .transform((v) => v.replace("Bearer ", "")),
           }),
-          body: z.object({
+          params: z.object({
             id: z.string(),
           }),
           response: {
@@ -286,7 +286,7 @@ export const route = (instance: typeof server) => {
         },
       },
       async (req) => {
-        const { id } = req.body;
+        const { id } = req.params;
 
         const training = await db
           .select()
