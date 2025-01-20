@@ -1,5 +1,5 @@
 {
-  "id": "70e21903-7d2f-42bc-8e3d-8d61b2d7daa4",
+  "id": "0bbc1723-3463-4280-81f5-efcbbe4a80b5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -739,7 +739,7 @@
         },
         "nik": {
           "name": "nik",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },

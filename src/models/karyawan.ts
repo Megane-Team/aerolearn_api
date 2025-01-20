@@ -5,7 +5,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 export const jenis_kelamin = pgEnum("jenis_kelamin", ["L", "P"]);
 export const karyawan = pgTable("karyawan", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
-    nik: integer().notNull().unique(),
+    nik: text().notNull().unique(),
     nama: text().notNull(),
     tanggal_lahir: date().notNull(),
     tempat_lahir: text().notNull(),

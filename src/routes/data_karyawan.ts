@@ -136,7 +136,7 @@ export const route = (instance: typeof server) => {
             password: z.string().nullable(),
             nama: z.string(),
             email: z.string(),
-            nik: z.number(),
+            nik: z.string(),
             tempat_lahir: z.string(),
             tanggal_lahir: z.string(),
             posisi: z.string(),
