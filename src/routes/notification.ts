@@ -136,5 +136,65 @@ export const route = (instance: typeof server) => {
           message: "Success",
         };
       }
+    )
+    .post(
+      "/api/+",
+      {
+        preHandler: [instance.authenticate],
+        schema: {
+          description: "adding notification",
+          tags: ["adding"],
+          headers: z.object({
+            authorization: z
+              .string()
+              .transform((v) => v.replace("Bearer ", "")),
+          }),
+          body: notificationSchema.insert,
+          response: {
+            200: genericResponse(200),
+            401: genericResponse(401),
+          },
+        },
+      },
+      async (req) => {
+        const { id_user, title, detail, id_pelaksanaan_pelatihan, tanggal } =
+          req.body;
+
+        const notificationsGet = await db
+          .select()
+          .from(notifications)
+          .where(
+            and(
+              eq(notifications.id_user, id_user),
+              eq(notifications.title, title),
+              eq(notifications.detail, detail)
+            )
+          )
+          .execute();
+
+        if (notificationsGet.length > 0) {
+          return {
+            statusCode: 401,
+            message: "notificationss is already exist",
+          };
+        }
+
+        await db
+          .insert(notifications)
+          .values({
+            id_user,
+            title,
+            detail,
+            tanggal,
+            id_pelaksanaan_pelatihan,
+            createdAt: new Date(),
+          })
+          .execute();
+
+        return {
+          statusCode: 200,
+          message: "Success",
+        };
+      }
     );
 };
