@@ -133,7 +133,7 @@ export const route = (instance: typeof server) => {
         const training = await db
           .select()
           .from(pelatihan)
-          .where(eq(pelatihan.nama, nama))
+          .where(eq(pelatihan.id, Number(id)))
           .execute();
 
         if (training.length == 0) {
