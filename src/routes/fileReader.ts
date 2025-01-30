@@ -236,7 +236,7 @@ export const route = (instance: typeof server) => {
             heveticeFont,
             36
           );
-          addTextToTemplate("Muhammad Hafidz", 360, -870, heveticeFont, 36);
+          addTextToTemplate("Nama lengkap", 360, -870, heveticeFont, 36);
           addTextToTemplate("Instruktur", -460, -550, heveticeFont, 36);
           addTextToTemplate(
             getSertifikat[0].nama_instruktur
