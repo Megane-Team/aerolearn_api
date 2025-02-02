@@ -163,12 +163,20 @@ export const route = (instance: typeof server) => {
           is_selesai,
         } = req.body;
         const { id } = req.params;
-
+        
         const pelaksanaanPelatihanData = await db
           .select()
           .from(pelaksanaanPelatihan)
           .where(eq(pelaksanaanPelatihan.id, Number(id)))
           .execute();
+        
+        if(pelaksanaanPelatihanData.length === 0) {
+          return {
+            statusCode: 401,
+            message: "data not found",
+          };
+        }
+        
         if (id_ruangan) {
           await db
             .update(ruangan)
