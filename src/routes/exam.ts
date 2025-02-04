@@ -376,27 +376,50 @@ export const route = (instance: typeof server) => {
           .execute();
         const isBenar = option[0].jawaban === res[0].text ? "benar" : "salah";
 
-        const response = await fetch(
-          `${webUrl}/api/exam/question/jawaban/${id}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              id_opsi_jawaban,
-              id_pelaksanaan_pelatihan,
-              id_peserta,
-              id_question,
-            }),
+        if(id !== undefined) {
+          const response = await fetch(
+            `${webUrl}/api/exam/question/jawaban/${id}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                id_opsi_jawaban,
+                id_pelaksanaan_pelatihan,
+                id_peserta,
+                id_question,
+              }),
+            }
+          );
+          if (response.status != 200) {
+            return {
+              statusCode: 400,
+              message: "error",
+            };
           }
-        );
-
-        if (response.status != 200) {
-          return {
-            statusCode: 400,
-            message: "error",
-          };
+        }else{
+          const response = await fetch(
+            `${webUrl}/api/exam/question/jawaban/`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                id_opsi_jawaban,
+                id_pelaksanaan_pelatihan,
+                id_peserta,
+                id_question,
+              }),
+            }
+          );
+          if (response.status != 200) {
+            return {
+              statusCode: 400,
+              message: "error",
+            };
+          }
         }
 
         if (id) {
